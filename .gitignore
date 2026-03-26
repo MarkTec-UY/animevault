@@ -1,0 +1,13 @@
+# Workspace-local metadata
+backend/.agents/
+backend/.codex/
+
+# Generated backend vendor views
+backend/resources/views/vendor/
+
+# Local database dumps
+db/*.sql
+
+# Common OS/editor noise at repo root
+.DS_Store
+Thumbs.db
