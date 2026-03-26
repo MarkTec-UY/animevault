@@ -1,0 +1,933 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "AnimeVault API",
+        "description": "OpenAPI specification for the AnimeVault backend",
+        "contact": {
+            "email": "support@animevault.local"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/v1/anime/filters": {
+            "get": {
+                "tags": [
+                    "Anime"
+                ],
+                "summary": "Returns available filter values for anime discovery",
+                "operationId": "apiAnimeFilters",
+                "responses": {
+                    "200": {
+                        "description": "Anime filter metadata"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Registers a new user and returns a Sanctum token",
+                "operationId": "apiAuthRegister",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Jose"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jose@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Jose"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "jose@example.com"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|sanctum-token-example"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Authenticates a user and returns a Sanctum token",
+                "operationId": "apiAuthLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jose@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User authenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Jose"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "jose@example.com"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|sanctum-token-example"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The provided credentials are incorrect."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Returns the authenticated user",
+                "operationId": "apiAuthMe",
+                "responses": {
+                    "200": {
+                        "description": "Authenticated user"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Revokes the current Sanctum token",
+                "operationId": "apiAuthLogout",
+                "responses": {
+                    "200": {
+                        "description": "Token revoked"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/anime": {
+            "get": {
+                "tags": [
+                    "Anime"
+                ],
+                "summary": "Lists anime with pagination, filters and sorting",
+                "operationId": "apiAnimeIndex",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Searches by anime ID or title (romaji, english, native)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        },
+                        "example": "cowboy bebop"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filters by one or more status codes. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "FINISHED",
+                            "RELEASING"
+                        ]
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "description": "Filters by one or more format codes. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "TV",
+                            "MOVIE"
+                        ]
+                    },
+                    {
+                        "name": "season",
+                        "in": "query",
+                        "description": "Filters by one or more season codes. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "SPRING",
+                            "FALL"
+                        ]
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "Filters by one or more source codes. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "MANGA",
+                            "ORIGINAL"
+                        ]
+                    },
+                    {
+                        "name": "genres",
+                        "in": "query",
+                        "description": "Filters by one or more genres. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "Action",
+                            "Drama"
+                        ]
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "Filters by season year",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2100,
+                            "minimum": 1900
+                        },
+                        "example": 2023
+                    },
+                    {
+                        "name": "is_adult",
+                        "in": "query",
+                        "description": "Filters adult content",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "example": false
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order for the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "popularity_desc",
+                            "enum": [
+                                "popularity_desc",
+                                "score_desc",
+                                "favourites_desc",
+                                "recently_updated",
+                                "start_date_desc",
+                                "title_asc"
+                            ]
+                        },
+                        "example": "popularity_desc"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 50,
+                            "minimum": 1
+                        },
+                        "example": 15
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated anime list"
+                    }
+                }
+            }
+        },
+        "/api/v1/ping": {
+            "get": {
+                "tags": [
+                    "System"
+                ],
+                "summary": "Checks that the API is reachable",
+                "operationId": "apiPing",
+                "responses": {
+                    "200": {
+                        "description": "API is reachable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "pong"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/anime/{id}": {
+            "get": {
+                "tags": [
+                    "Anime"
+                ],
+                "summary": "Gets a single anime with its related metadata",
+                "operationId": "apiAnimeShow",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Anime identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Anime found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "titles": {
+                                            "properties": {
+                                                "romaji": {
+                                                    "type": "string",
+                                                    "example": "Cowboy Bebop",
+                                                    "nullable": true
+                                                },
+                                                "english": {
+                                                    "type": "string",
+                                                    "example": "Cowboy Bebop",
+                                                    "nullable": true
+                                                },
+                                                "native": {
+                                                    "type": "string",
+                                                    "example": "カウボーイビバップ",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "genres": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Anime not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Anime not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/me/favorites": {
+            "get": {
+                "tags": [
+                    "User Favorites"
+                ],
+                "summary": "Lists the authenticated user favorite anime",
+                "operationId": "apiMeFavoritesIndex",
+                "responses": {
+                    "200": {
+                        "description": "Favorite anime list"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/me/favorites/{anime}": {
+            "put": {
+                "tags": [
+                    "User Favorites"
+                ],
+                "summary": "Adds an anime to the authenticated user favorites",
+                "operationId": "apiMeFavoritesUpsert",
+                "parameters": [
+                    {
+                        "name": "anime",
+                        "in": "path",
+                        "description": "Anime identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Favorite already existed"
+                    },
+                    "201": {
+                        "description": "Favorite created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Anime not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "User Favorites"
+                ],
+                "summary": "Removes an anime from the authenticated user favorites",
+                "operationId": "apiMeFavoritesDelete",
+                "parameters": [
+                    {
+                        "name": "anime",
+                        "in": "path",
+                        "description": "Anime identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Favorite removed"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Anime not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/me/library": {
+            "get": {
+                "tags": [
+                    "User Library"
+                ],
+                "summary": "Lists the authenticated user anime library",
+                "operationId": "apiMeLibraryIndex",
+                "responses": {
+                    "200": {
+                        "description": "User library list"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/me/anime/{anime}": {
+            "get": {
+                "tags": [
+                    "User Library"
+                ],
+                "summary": "Gets the authenticated user state for a specific anime",
+                "operationId": "apiMeAnimeState",
+                "parameters": [
+                    {
+                        "name": "anime",
+                        "in": "path",
+                        "description": "Anime identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User anime state"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Anime not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/me/library/{anime}": {
+            "put": {
+                "tags": [
+                    "User Library"
+                ],
+                "summary": "Creates or updates a library entry for the authenticated user",
+                "operationId": "apiMeLibraryUpsert",
+                "parameters": [
+                    {
+                        "name": "anime",
+                        "in": "path",
+                        "description": "Anime identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "watching"
+                                    },
+                                    "progress_episodes": {
+                                        "type": "integer",
+                                        "example": 18,
+                                        "nullable": true
+                                    },
+                                    "score": {
+                                        "type": "integer",
+                                        "example": 9,
+                                        "nullable": true
+                                    },
+                                    "started_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "completed_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Library entry updated"
+                    },
+                    "201": {
+                        "description": "Library entry created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Anime not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "User Library"
+                ],
+                "summary": "Deletes a library entry for the authenticated user",
+                "operationId": "apiMeLibraryDelete",
+                "parameters": [
+                    {
+                        "name": "anime",
+                        "in": "path",
+                        "description": "Anime identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Library entry deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Anime not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/me/notifications": {
+            "get": {
+                "tags": [
+                    "User Notifications"
+                ],
+                "summary": "Lists the authenticated user notifications",
+                "operationId": "apiMeNotificationsIndex",
+                "responses": {
+                    "200": {
+                        "description": "User notifications list"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/me/notifications/{notification}/read": {
+            "post": {
+                "tags": [
+                    "User Notifications"
+                ],
+                "summary": "Marks a single authenticated user notification as read",
+                "operationId": "apiMeNotificationsRead",
+                "parameters": [
+                    {
+                        "name": "notification",
+                        "in": "path",
+                        "description": "Notification identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification marked as read"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Notification not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/me/notifications/read-all": {
+            "post": {
+                "tags": [
+                    "User Notifications"
+                ],
+                "summary": "Marks all authenticated user notifications as read",
+                "operationId": "apiMeNotificationsReadAll",
+                "responses": {
+                    "200": {
+                        "description": "Notifications marked as read"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "sanctumBearerAuth": {
+                "type": "http",
+                "description": "Bearer token returned by the Sanctum login or register endpoints",
+                "bearerFormat": "Token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Anime",
+            "description": "Anime catalog endpoints"
+        },
+        {
+            "name": "Auth",
+            "description": "Authentication endpoints"
+        },
+        {
+            "name": "System",
+            "description": "System health and utility endpoints"
+        },
+        {
+            "name": "User Favorites",
+            "description": "Authenticated user anime favorites"
+        },
+        {
+            "name": "User Library",
+            "description": "Authenticated user anime tracking and favorites"
+        },
+        {
+            "name": "User Notifications",
+            "description": "Authenticated user anime notifications"
+        }
+    ]
+}

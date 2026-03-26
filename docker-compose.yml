@@ -1,0 +1,101 @@
+name: animevault
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: animevault-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - frontend_next:/app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      INTERNAL_API_URL: http://backend:8000
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: animevault-backend
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+      - backend_node_modules:/var/www/html/node_modules
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: AnimeVault
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: "5432"
+      DB_DATABASE: animevault
+      DB_USERNAME: animevault
+      DB_PASSWORD: animevault
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pgsql:
+    image: postgres:18.3-alpine
+    container_name: animevault-pgsql
+    environment:
+      POSTGRES_DB: animevault
+      POSTGRES_USER: animevault
+      POSTGRES_PASSWORD: animevault
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgsql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U animevault -d animevault"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.6-alpine
+    container_name: animevault-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  frontend_node_modules:
+  frontend_next:
+  backend_vendor:
+  backend_node_modules:
+  pgsql_data:
+  redis_data:
