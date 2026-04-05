@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { fetchAnimeById } from "@/lib/api/anime"
 import { getAnimeUrl } from "@/lib/utils/anime-urls"
+import AnimeNotFound from "@/components/anime/anime-not-found"
 
 /**
  * Fallback route for /anime/[id] (without title)
@@ -19,9 +20,8 @@ export default async function AnimeIdPage({ params }: PageProps) {
   const anime = await fetchAnimeById(id)
 
   if (!anime) {
-    // Anime doesn't exist - let 404 page handle it
-    // Dynamic routes will return 404 by default
-    return new Response("Not Found", { status: 404 })
+    // Display friendly error page instead of generic 404
+    return <AnimeNotFound id={id} />
   }
 
   // Redirect to canonical URL with title slug

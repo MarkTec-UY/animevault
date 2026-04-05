@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation"
+import { redirect } from "next/navigation"
 import type { Metadata } from "next"
 import { fetchAnimeById } from "@/lib/api/anime"
 import { getAnimeUrlFromIdAndTitle, titleToSlug } from "@/lib/utils/anime-urls"
@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/footer"
 import { AnimeHero } from "@/components/anime/anime-hero"
 import { AnimeSidebar } from "@/components/anime/anime-sidebar"
 import { AnimeTabs } from "@/components/anime/anime-tabs"
+import AnimeNotFound from "@/components/anime/anime-not-found"
 import type { AnimeData } from "@/lib/types/anime"
 
 // Force dynamic rendering to handle redirects on each request
@@ -54,7 +55,8 @@ export default async function AnimePage({ params }: PageProps) {
   const anime = await getAnime(id)
 
   if (!anime) {
-    notFound()
+    // Show friendly error page if anime doesn't exist
+    return <AnimeNotFound id={id} />
   }
 
   // Validate and redirect to canonical URL if title doesn't match
