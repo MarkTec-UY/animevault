@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Search, Bell, User, Menu, X, ChevronDown, Flame, BookOpen, TrendingUp, Star, Calendar, Layers } from "lucide-react"
+import { Search, Bell, Menu, X, ChevronDown, Flame, BookOpen, TrendingUp, Star, Calendar, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 const navLinks = [

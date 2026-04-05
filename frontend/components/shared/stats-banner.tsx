@@ -1,29 +1,41 @@
-import { Users, Film, BookOpen, Star } from "lucide-react"
+import { BookOpen, Film, Layers3, RadioTower } from "lucide-react"
 
-const stats = [
-  { label: "Anime Titles", value: "18,400+", icon: Film, description: "From classic to seasonal" },
-  { label: "Manga Series", value: "71,200+", icon: BookOpen, description: "Across all genres" },
-  { label: "Active Users", value: "2.4M+", icon: Users, description: "Tracking their lists" },
-  { label: "Reviews & Ratings", value: "9.8M+", icon: Star, description: "From the community" },
-]
+import { formatCompactNumber } from "@/features/home/formatters"
+import type { HomeStat } from "@/features/home/types"
 
-export function StatsBanner() {
+interface StatsBannerProps {
+  items: HomeStat[]
+}
+
+const statIcons = [Film, Layers3, BookOpen, RadioTower]
+
+export function StatsBanner({ items }: StatsBannerProps) {
+  if (items.length === 0) {
+    return null
+  }
+
   return (
-    <section className="py-14 bg-background border-y border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center text-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <stat.icon className="w-5 h-5 text-primary" />
+    <section className="border-y border-border bg-background py-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+          {items.map((stat, index) => {
+            const Icon = statIcons[index % statIcons.length]
+
+            return (
+              <div key={stat.label} className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+                  <Icon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-serif text-3xl font-normal text-foreground sm:text-4xl">
+                    {formatCompactNumber(stat.value) ?? stat.value}
+                  </p>
+                  <p className="mt-0.5 text-sm font-semibold text-foreground">{stat.label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{stat.description}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-serif text-3xl sm:text-4xl font-normal text-foreground">{stat.value}</p>
-                <p className="text-sm font-semibold text-foreground mt-0.5">{stat.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{stat.description}</p>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>

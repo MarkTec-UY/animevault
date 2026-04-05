@@ -248,6 +248,45 @@
                 ]
             }
         },
+        "/api/v1/editor/session": {
+            "get": {
+                "tags": [
+                    "Editor"
+                ],
+                "summary": "Returns the authenticated editor session",
+                "operationId": "apiEditorSession",
+                "responses": {
+                    "200": {
+                        "description": "Authenticated editor"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/home": {
+            "get": {
+                "tags": [
+                    "Home"
+                ],
+                "summary": "Returns the public landing page payload for the frontend home",
+                "operationId": "apiHomePage",
+                "responses": {
+                    "200": {
+                        "description": "Home page payload"
+                    }
+                }
+            }
+        },
         "/api/v1/anime": {
             "get": {
                 "tags": [
@@ -1152,6 +1191,14 @@
         {
             "name": "Auth",
             "description": "Authentication endpoints"
+        },
+        {
+            "name": "Editor",
+            "description": "Protected editorial endpoints"
+        },
+        {
+            "name": "Home",
+            "description": "Public home page feed endpoints"
         },
         {
             "name": "System",

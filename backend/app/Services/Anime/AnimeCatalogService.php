@@ -69,7 +69,7 @@ class AnimeCatalogService
 
                 return [
                     'data' => collect($paginator->items())
-                        ->map(fn (Anime $anime): array => $this->mapSummary($anime, $user))
+                        ->map(fn (Anime $anime): array => $this->summary($anime, $user))
                         ->all(),
                     'meta' => [
                         'current_page' => $paginator->currentPage(),
@@ -108,7 +108,7 @@ class AnimeCatalogService
         }
 
         $payload = array_merge(
-            $this->mapSummary($anime, $user),
+            $this->summary($anime, $user),
             [
                 'description' => $anime->description,
                 'end_date' => $this->nullableDateString($anime->end_date),
@@ -208,7 +208,7 @@ class AnimeCatalogService
     /**
      * @return array<int, string|\Closure>
      */
-    private function summaryRelations(): array
+    public function summaryRelations(): array
     {
         return [
             'formatReference:code,description',
@@ -322,7 +322,7 @@ class AnimeCatalogService
     /**
      * @return array<string, mixed>
      */
-    private function mapSummary(Anime $anime, ?User $user = null): array
+    public function summary(Anime $anime, ?User $user = null): array
     {
         $titles = [
             'romaji' => $anime->titleByType('romaji'),

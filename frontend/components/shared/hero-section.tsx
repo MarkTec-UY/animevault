@@ -1,149 +1,189 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Play, Plus, Star, ChevronRight, TrendingUp } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { ChevronRight, Play, Sparkles, Star, TrendingUp } from "lucide-react"
 
-const featuredAnime = {
-  title: "Celestial Chronicles",
-  jaTitle: "天界年代記",
-  episode: "Episode 12",
-  year: "2025",
-  season: "Spring",
-  rating: 9.2,
-  votes: "142K",
-  genres: ["Fantasy", "Action", "Drama"],
-  synopsis:
-    "In a world where celestial beings and mortals clash for the fate of creation, a young warrior discovers he carries the power of a forgotten god within him. As ancient prophecies unravel and alliances crumble, he must master his power before the seven seals that bind chaos are broken forever.",
-  image: "/images/featured-anime.jpg",
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { sanitizeHtml } from "@/lib/utils/text"
+import { formatCompactNumber, formatEpisodes, formatScore } from "@/features/home/formatters"
+import type { HomeAnime } from "@/features/home/types"
+
+interface HeroSectionProps {
+  featured: HomeAnime | null
+  spotlight: HomeAnime[]
 }
 
-const spotlightItems = [
-  { rank: 1, title: "Celestial Chronicles", score: 9.2, image: "/images/anime-1.jpg" },
-  { rank: 2, title: "Shadow Mage Academy", score: 8.9, image: "/images/anime-2.jpg" },
-  { rank: 3, title: "Iron Genesis Sigma", score: 8.7, image: "/images/anime-3.jpg" },
-]
+export function HeroSection({ featured, spotlight }: HeroSectionProps) {
+  if (!featured) {
+    return (
+      <section className="relative min-h-[70vh] overflow-hidden border-b border-border bg-background">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-end gap-6 px-4 pt-32 pb-20 sm:px-6 lg:px-8">
+          <Badge variant="secondary" className="bg-primary/10 text-primary">
+            Catalog syncing
+          </Badge>
+          <h1 className="max-w-3xl font-serif text-5xl text-foreground sm:text-6xl">
+            Anime data is loading from the backend.
+          </h1>
+          <p className="max-w-xl text-base leading-7 text-muted-foreground">
+            The landing page is already wired to the API. As soon as the catalog responds,
+            featured titles and live sections will appear here automatically.
+          </p>
+          <Button asChild size="lg" className="rounded-xl">
+            <Link href="/anime">Browse the catalog</Link>
+          </Button>
+        </div>
+      </section>
+    )
+  }
 
-export function HeroSection() {
+  const popularity = formatCompactNumber(featured.popularity)
+
   return (
-    <section className="relative min-h-screen flex flex-col justify-end overflow-hidden">
-      {/* Background image */}
+    <section className="relative min-h-screen overflow-hidden border-b border-border">
       <div className="absolute inset-0">
-        <Image
-          src="/images/hero-bg.jpg"
-          alt="AnimeVault hero background — cinematic anime landscape"
-          fill
-          priority
-          className="object-cover object-center"
-        />
-        {/* Dark gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-        {/* Subtle noise texture overlay */}
-        <div className="absolute inset-0 bg-background/10" />
+        {featured.bannerImageUrl ? (
+          <Image
+            src={featured.bannerImageUrl}
+            alt={`${featured.title} banner artwork`}
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+        ) : (
+          <div
+            className="h-full w-full"
+            style={{
+              background:
+                featured.coverImageColor ??
+                "linear-gradient(135deg, rgba(17,24,39,1) 0%, rgba(99,163,117,0.8) 100%)",
+            }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/84 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-32 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
-          {/* Main featured content */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* Label */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-primary/20 border border-primary/30 text-primary rounded-full px-3 py-1 text-xs font-medium">
-                <TrendingUp className="w-3 h-3" />
-                <span>Featured This Season</span>
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pt-32 pb-20 sm:px-6 lg:px-8">
+        <div className="grid items-end gap-12 lg:grid-cols-12">
+          <div className="space-y-6 lg:col-span-7">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
+                <TrendingUp className="h-3 w-3" />
+                <span>Live from the catalog</span>
               </div>
-              <Badge variant="secondary" className="bg-accent/20 border-accent/30 text-accent text-xs">
-                {featuredAnime.season} {featuredAnime.year}
-              </Badge>
+              {featured.seasonLabel ? (
+                <Badge variant="secondary" className="border-accent/25 bg-accent/15 text-accent">
+                  {featured.seasonLabel}
+                </Badge>
+              ) : null}
             </div>
 
-            {/* Title */}
-            <div className="space-y-1">
-              <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-foreground leading-tight text-balance">
-                {featuredAnime.title}
+            <div className="space-y-2">
+              <h1 className="max-w-4xl font-serif text-5xl leading-tight text-foreground text-balance sm:text-6xl lg:text-7xl">
+                {featured.title}
               </h1>
-              <p className="text-muted-foreground text-lg font-noto-jp" lang="ja">
-                {featuredAnime.jaTitle}
-              </p>
+              {featured.nativeTitle ? (
+                <p className="text-lg text-muted-foreground" lang="ja">
+                  {featured.nativeTitle}
+                </p>
+              ) : null}
             </div>
 
-            {/* Meta */}
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-1.5">
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span className="text-foreground font-semibold">{featuredAnime.rating}</span>
-                <span className="text-muted-foreground">({featuredAnime.votes} votes)</span>
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-semibold text-foreground">{formatScore(featured.score)}</span>
               </div>
-              <span className="text-border">|</span>
-              <span className="text-muted-foreground">{featuredAnime.episode}</span>
-              <span className="text-border">|</span>
+              {popularity ? <span className="text-muted-foreground">{popularity} popularity</span> : null}
+              <span className="text-muted-foreground">{formatEpisodes(featured.episodes)}</span>
+              {featured.studioName ? <span className="text-muted-foreground">{featured.studioName}</span> : null}
+            </div>
+
+            {featured.genres.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {featuredAnime.genres.map((genre) => (
+                {featured.genres.slice(0, 4).map((genre) => (
                   <span
                     key={genre}
-                    className="px-2.5 py-0.5 rounded-full text-xs bg-secondary text-muted-foreground border border-border"
+                    className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs text-muted-foreground"
                   >
                     {genre}
                   </span>
                 ))}
               </div>
-            </div>
+            ) : null}
 
-            {/* Synopsis */}
-            <p className="text-muted-foreground leading-relaxed max-w-xl text-sm sm:text-base line-clamp-3">
-              {featuredAnime.synopsis}
-            </p>
+            {featured.description ? (
+              <p
+                className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(featured.description) }}
+              />
+            ) : null}
 
-            {/* Actions */}
             <div className="flex flex-wrap gap-3">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl">
-                <Play className="w-4 h-4 fill-current" />
-                Watch Now
+              <Button size="lg" className="gap-2 rounded-xl" asChild>
+                <Link href={featured.href}>
+                  <Play className="h-4 w-4 fill-current" />
+                  View featured anime
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-border text-foreground hover:bg-secondary gap-2 rounded-xl">
-                <Plus className="w-4 h-4" />
-                Add to List
-              </Button>
-              <Button size="lg" variant="ghost" className="text-muted-foreground hover:text-foreground gap-1 rounded-xl">
-                More Info
-                <ChevronRight className="w-4 h-4" />
+              <Button size="lg" variant="outline" className="gap-2 rounded-xl" asChild>
+                <Link href="/anime">
+                  <Sparkles className="h-4 w-4" />
+                  Explore catalog
+                </Link>
               </Button>
             </div>
           </div>
 
-          {/* Spotlight sidebar */}
-          <div className="lg:col-span-5 hidden lg:block">
+          <div className="hidden lg:col-span-5 lg:block">
             <div className="space-y-3">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Spotlight</h2>
-                <Link href="/rankings" className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
-                  View All <ChevronRight className="w-3 h-3" />
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                  Spotlight
+                </h2>
+                <Link
+                  href="/anime"
+                  className="flex items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80"
+                >
+                  View catalog <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
-              {spotlightItems.map((item) => (
+              {spotlight.map((item, index) => (
                 <Link
-                  key={item.rank}
-                  href={`/anime/${item.title.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="flex items-center gap-4 p-3 rounded-xl bg-card/50 border border-border/50 hover:bg-card hover:border-border transition-all duration-200 group"
+                  key={item.id}
+                  href={item.href}
+                  className="group flex items-center gap-4 rounded-xl border border-border/60 bg-card/65 p-3 transition-all duration-200 hover:border-primary/40 hover:bg-card"
                 >
-                  <span className="text-2xl font-bold text-primary/60 font-serif w-8 shrink-0">
-                    {String(item.rank).padStart(2, "0")}
+                  <span className="w-8 shrink-0 font-serif text-2xl text-primary/60">
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                  <div className="relative w-12 h-16 rounded-md overflow-hidden shrink-0">
-                    <Image src={item.image} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-md bg-secondary">
+                    {item.coverImageUrl ? (
+                      <Image
+                        src={item.coverImageUrl}
+                        alt={item.title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="48px"
+                      />
+                    ) : (
+                      <div
+                        className="h-full w-full"
+                        style={{ background: item.coverImageColor ?? "rgba(99,163,117,0.18)" }}
+                      />
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
                       {item.title}
                     </p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                      <span className="text-xs text-muted-foreground">{item.score}</span>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{formatScore(item.score)}</span>
+                      {item.seasonLabel ? <span>{item.seasonLabel}</span> : null}
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
                 </Link>
               ))}
             </div>
@@ -151,8 +191,7 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      <div className="pointer-events-none absolute right-0 bottom-0 left-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
   )
 }

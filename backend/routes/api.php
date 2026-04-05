@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AnimeFiltersController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EditorSessionController;
+use App\Http\Controllers\Api\HomePageController;
 use App\Http\Controllers\Api\ListAnimeController;
 use App\Http\Controllers\Api\PingController;
 use App\Http\Controllers\Api\ShowAnimeController;
@@ -66,6 +67,7 @@ Route::prefix('v1')->group(function (): void {
     Route::prefix('editor')->middleware(['auth:sanctum', 'manage-news'])->group(function (): void {
         Route::get('/session', EditorSessionController::class)->name('api.editor.session');
     });
+    Route::get('/home', HomePageController::class)->name('api.home');
     Route::get('/ping', PingController::class)->name('api.ping');
     Route::get('/anime', ListAnimeController::class)->name('api.anime.index');
     Route::get('/anime/filters', AnimeFiltersController::class)->name('api.anime.filters');

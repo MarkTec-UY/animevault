@@ -1,110 +1,84 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Star, ChevronRight, Calendar, Flame } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Calendar, ChevronRight, Star } from "lucide-react"
 
-const seasonalAnime = [
-  {
-    id: 1,
-    slug: "celestial-chronicles",
-    title: "Celestial Chronicles",
-    score: 9.2,
-    episodes: "24 eps",
-    genres: ["Fantasy", "Action"],
-    image: "/images/anime-1.jpg",
-    isNew: true,
-    popularity: "#1 this season",
-  },
-  {
-    id: 2,
-    slug: "beneath-april-skies",
-    title: "Beneath April Skies",
-    score: 8.4,
-    episodes: "12 eps",
-    genres: ["Romance", "Slice of Life"],
-    image: "/images/anime-5.jpg",
-    isNew: true,
-    popularity: "#2 this season",
-  },
-  {
-    id: 3,
-    slug: "neon-detective",
-    title: "Neon Detective",
-    score: 8.3,
-    episodes: "10 eps",
-    genres: ["Mystery", "Thriller"],
-    image: "/images/anime-6.jpg",
-    isNew: false,
-    popularity: "#3 this season",
-  },
-  {
-    id: 4,
-    slug: "iron-genesis-sigma",
-    title: "Iron Genesis Sigma",
-    score: 8.7,
-    episodes: "26 eps",
-    genres: ["Mecha", "Sci-Fi"],
-    image: "/images/anime-3.jpg",
-    isNew: false,
-    popularity: "#4 this season",
-  },
-]
+import { formatEpisodes, formatScore } from "@/features/home/formatters"
+import type { HomeAnime } from "@/features/home/types"
 
-export function SeasonalSection() {
+interface SeasonalSectionProps {
+  label: string
+  items: HomeAnime[]
+}
+
+export function SeasonalSection({ label, items }: SeasonalSectionProps) {
+  if (items.length === 0) {
+    return null
+  }
+
   return (
-    <section className="py-16 bg-card/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between mb-8">
+    <section className="bg-card/30 py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 flex items-end justify-between">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-accent text-sm font-medium">
-              <Calendar className="w-4 h-4" />
-              <span>Spring 2025</span>
+            <div className="flex items-center gap-2 text-sm font-medium text-accent">
+              <Calendar className="h-4 w-4" />
+              <span>{label}</span>
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl text-foreground">This Season</h2>
+            <h2 className="font-serif text-3xl text-foreground sm:text-4xl">This Season</h2>
           </div>
-          <Link href="/seasonal" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-            Full Schedule <ChevronRight className="w-4 h-4" />
+          <Link
+            href="/anime"
+            className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
+          >
+            Full schedule <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {seasonalAnime.map((anime) => (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((anime, index) => (
             <Link
               key={anime.id}
-              href={`/anime/${anime.slug}`}
-              className="group flex gap-4 bg-card border border-border rounded-xl p-3 hover:border-accent/40 hover:bg-card/80 transition-all duration-200"
+              href={anime.href}
+              className="group flex gap-4 rounded-xl border border-border bg-card p-3 transition-all duration-200 hover:border-accent/40 hover:bg-card/80"
             >
-              <div className="relative w-16 h-24 rounded-lg overflow-hidden shrink-0">
-                <Image
-                  src={anime.image}
-                  alt={anime.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  sizes="64px"
-                />
-                {anime.isNew && (
-                  <div className="absolute top-1 left-1">
-                    <span className="text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-medium">NEW</span>
-                  </div>
+              <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                {anime.coverImageUrl ? (
+                  <Image
+                    src={anime.coverImageUrl}
+                    alt={anime.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="64px"
+                  />
+                ) : (
+                  <div
+                    className="h-full w-full"
+                    style={{ background: anime.coverImageColor ?? "rgba(167,139,250,0.16)" }}
+                  />
                 )}
+                {index < 2 ? (
+                  <div className="absolute top-1 left-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+                    HOT
+                  </div>
+                ) : null}
               </div>
-              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+              <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
                 <div>
-                  <p className="text-xs text-accent font-medium mb-1">{anime.popularity}</p>
-                  <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                  <p className="mb-1 text-xs font-medium text-accent">#{index + 1} this season</p>
+                  <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
                     {anime.title}
                   </h3>
                 </div>
-                <div className="space-y-1.5 mt-2">
+                <div className="mt-2 space-y-1.5">
                   <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                    <span className="text-xs font-semibold text-foreground">{anime.score}</span>
-                    <span className="text-xs text-muted-foreground ml-1">{anime.episodes}</span>
+                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-xs font-semibold text-foreground">{formatScore(anime.score)}</span>
+                    <span className="ml-1 text-xs text-muted-foreground">{formatEpisodes(anime.episodes)}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {anime.genres.slice(0, 2).map((g) => (
-                      <span key={g} className="text-xs px-1.5 py-0.5 bg-secondary rounded text-muted-foreground">
-                        {g}
+                    {anime.genres.slice(0, 2).map((genre) => (
+                      <span key={genre} className="rounded bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">
+                        {genre}
                       </span>
                     ))}
                   </div>

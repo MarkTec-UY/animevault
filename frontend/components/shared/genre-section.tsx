@@ -1,50 +1,72 @@
 import Link from "next/link"
-import { Layers, Sword, Heart, Zap, Ghost, Rocket, Drama, Music, Laugh, Eye } from "lucide-react"
+import { Drama, Eye, Heart, Layers, Rocket, Sword, Zap } from "lucide-react"
 
-const genres = [
-  { name: "Action", href: "/genre/action", icon: Sword, color: "from-red-500/20 to-red-500/5", accent: "text-red-400", border: "border-red-500/20 hover:border-red-400/50", count: "2,340" },
-  { name: "Romance", href: "/genre/romance", icon: Heart, color: "from-pink-500/20 to-pink-500/5", accent: "text-pink-400", border: "border-pink-500/20 hover:border-pink-400/50", count: "1,820" },
-  { name: "Fantasy", href: "/genre/fantasy", icon: Zap, color: "from-yellow-500/20 to-yellow-500/5", accent: "text-yellow-400", border: "border-yellow-500/20 hover:border-yellow-400/50", count: "3,105" },
-  { name: "Horror", href: "/genre/horror", icon: Ghost, color: "from-purple-500/20 to-purple-500/5", accent: "text-purple-400", border: "border-purple-500/20 hover:border-purple-400/50", count: "645" },
-  { name: "Sci-Fi", href: "/genre/sci-fi", icon: Rocket, color: "from-blue-500/20 to-blue-500/5", accent: "text-blue-400", border: "border-blue-500/20 hover:border-blue-400/50", count: "1,260" },
-  { name: "Drama", href: "/genre/drama", icon: Drama, color: "from-orange-500/20 to-orange-500/5", accent: "text-orange-400", border: "border-orange-500/20 hover:border-orange-400/50", count: "2,080" },
-  { name: "Music", href: "/genre/music", icon: Music, color: "from-teal-500/20 to-teal-500/5", accent: "text-teal-400", border: "border-teal-500/20 hover:border-teal-400/50", count: "385" },
-  { name: "Comedy", href: "/genre/comedy", icon: Laugh, color: "from-lime-500/20 to-lime-500/5", accent: "text-lime-400", border: "border-lime-500/20 hover:border-lime-400/50", count: "1,570" },
-  { name: "Mystery", href: "/genre/mystery", icon: Eye, color: "from-indigo-500/20 to-indigo-500/5", accent: "text-indigo-400", border: "border-indigo-500/20 hover:border-indigo-400/50", count: "890" },
-  { name: "All Genres", href: "/genres", icon: Layers, color: "from-primary/20 to-primary/5", accent: "text-primary", border: "border-primary/20 hover:border-primary/50", count: "30+" },
+import { formatCompactNumber } from "@/features/home/formatters"
+import type { HomeGenre } from "@/features/home/types"
+
+interface GenreSectionProps {
+  items: HomeGenre[]
+}
+
+const genreIcons = {
+  action: Sword,
+  adventure: Rocket,
+  drama: Drama,
+  fantasy: Zap,
+  mystery: Eye,
+  romance: Heart,
+} as const
+
+const genreAccent = [
+  "from-primary/20 to-primary/5 border-primary/20 hover:border-primary/50 text-primary",
+  "from-accent/20 to-accent/5 border-accent/20 hover:border-accent/50 text-accent",
+  "from-sky-500/20 to-sky-500/5 border-sky-500/20 hover:border-sky-500/50 text-sky-500",
+  "from-amber-500/20 to-amber-500/5 border-amber-500/20 hover:border-amber-500/50 text-amber-500",
 ]
 
-export function GenreSection() {
+export function GenreSection({ items }: GenreSectionProps) {
+  if (items.length === 0) {
+    return null
+  }
+
   return (
-    <section className="py-16 bg-card/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10 space-y-2">
-          <div className="flex items-center justify-center gap-2 text-primary text-sm font-medium">
-            <Layers className="w-4 h-4" />
-            <span>Browse by Category</span>
+    <section className="bg-card/30 py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 space-y-2 text-center">
+          <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary">
+            <Layers className="h-4 w-4" />
+            <span>Browse by category</span>
           </div>
-          <h2 className="font-serif text-3xl sm:text-4xl text-foreground">Explore Genres</h2>
-          <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-            From pulse-pounding action to heartfelt romance — find exactly the kind of story you&apos;re in the mood for.
+          <h2 className="font-serif text-3xl text-foreground sm:text-4xl">Explore Genres</h2>
+          <p className="mx-auto max-w-lg text-sm leading-relaxed text-muted-foreground">
+            These genre counts are coming directly from the catalog, so the home page
+            reflects what is actually available in the database right now.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {genres.map((genre) => (
-            <Link
-              key={genre.name}
-              href={genre.href}
-              className={`group relative flex flex-col items-center gap-3 p-5 rounded-xl border bg-card bg-gradient-to-b ${genre.color} ${genre.border} transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20`}
-            >
-              <div className={`w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
-                <genre.icon className={`w-5 h-5 ${genre.accent}`} />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-foreground">{genre.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{genre.count} titles</p>
-              </div>
-            </Link>
-          ))}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {items.map((genre, index) => {
+            const Icon = genreIcons[genre.slug as keyof typeof genreIcons] ?? Layers
+            const accent = genreAccent[index % genreAccent.length]
+
+            return (
+              <Link
+                key={genre.slug}
+                href={`/genre/${genre.slug}`}
+                className={`group relative flex flex-col items-center gap-3 rounded-xl border bg-card bg-gradient-to-b p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10 ${accent}`}
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card transition-transform duration-200 group-hover:scale-110">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-foreground">{genre.name}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {formatCompactNumber(genre.animeCount) ?? genre.animeCount} titles
+                  </p>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </div>
     </section>
