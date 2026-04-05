@@ -363,4 +363,156 @@ Rules:
 * Use `src/app` as the main application root when possible.
 * Use nested `loading.tsx` files for route-level skeletons.
 * Use `layout.tsx` to define shared shells only.
+
+## Color System
+
+Use a small, intentional palette. The app should feel like an anime/manga platform: modern, readable, slightly cinematic, and visually calm.
+
+### Primary Brand Color
+
+`#63A375` — Mint Leaf
+
+Use this as the main brand color for:
+
+* primary buttons
+* active links
+* selected states
+* success-like UI accents
+* tags and small highlights
+
+Rules:
+
+* Use it as the main identity color, but not everywhere.
+* Do not flood the interface with green.
+* Keep it for actions and emphasis so it retains meaning.
+
+### Secondary Base Color
+
+`#111827` — Deep Charcoal
+
+Use this as the main dark base for:
+
+* dark backgrounds
+* text on light surfaces when needed
+* headers
+* overlays
+* strong contrast sections
+
+Rules:
+
+* Use it to anchor the UI and make the green stand out.
+* Prefer it for dark mode shells and editorial-looking sections.
+* Do not use pure black as the default unless the design specifically needs it.
+
+### Surface Color
+
+`#F7F7F2` — Warm Off-White
+
+Use this as the main light surface for:
+
+* page backgrounds
+* cards
+* reading surfaces
+* light sections
+* subtle containers
+
+Rules:
+
+* Use it instead of harsh pure white when possible.
+* Keep long reading areas soft and comfortable.
+* Use it to reduce visual fatigue on content-heavy pages.
+
+### Vibrant Accent Color
+
+`#A78BFA` — Purple Accent
+
+Use this as the secondary accent for:
+
+* featured content
+* premium or special states
+* notifications
+* decorative highlights
+* occasional callouts
+
+Rules:
+
+* Use it sparingly.
+* Do not compete with the primary green.
+* Reserve it for moments where a richer accent is useful.
+
+### Color Usage Rules
+
+* Keep the palette small and consistent.
+* Use one primary, one base, one surface, and one vibrant accent.
+* Use semantic tokens instead of hardcoding color values everywhere.
+* Prefer accessible contrast for all text and controls.
+* Use color to communicate hierarchy, not decoration alone.
+* Avoid using both green and purple at full intensity in the same small UI area unless there is a clear hierarchy.
+
+## Typography Rules
+
+Use a maximum of three Google Fonts across the app.
+
+### Sans Font: Inter
+
+Use `Inter` as the main UI and body font.
+
+Best for:
+
+* navigation
+* buttons
+* body text
+* cards
+* forms
+* labels
+* tables
+* general application UI
+
+Rules:
+
+* Inter should be the default font for most of the app.
+* Use it for maximum readability and consistency.
+* Keep it as the font for dense interfaces and dashboard-like screens.
+
+### Display Font: DM Serif Display
+
+Use `DM Serif Display` for large titles and special display moments.
+
+Best for:
+
+* page heroes
+* anime or manga title headers
+* section introductions
+* editorial feature blocks
+
+Rules:
+
+* Use it only for large text sizes.
+* Do not use it for body text, labels, or compact UI.
+* Use it to give the app personality without hurting readability.
+
+### Japanese Font: Noto Sans JP
+
+Use `Noto Sans JP` when the app needs Japanese text support.
+
+Best for:
+
+* Japanese titles
+* kana/kanji text
+* localization content
+* UI moments where Japanese characters must render cleanly
+
+Rules:
+
+* Use it only where Japanese text is actually shown.
+* Do not replace Inter globally unless the page is primarily Japanese content.
+* Keep it as a supporting font, not the main visual identity.
+
+### Typography Usage Rules
+
+* Use 2 fonts by default: Inter and DM Serif Display.
+* Add Noto Sans JP only when the page or component needs Japanese text rendering.
+* Do not introduce extra fonts without a strong reason.
+* Keep typography hierarchy simple and predictable.
+* Use the display font for emphasis, not for routine interface text.
 <!-- END:nextjs-agent-rules -->
