@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Search, Bell, Menu, X, ChevronDown, Flame, BookOpen, TrendingUp, Star, Calendar, Layers } from "lucide-react"
+import { Bell, Menu, X, ChevronDown, Flame, BookOpen, TrendingUp, Star, Calendar, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { SearchAnime } from "@/components/shared/search-anime"
 import { cn } from "@/lib/utils"
 
 const navLinks = [
@@ -38,7 +38,6 @@ const navLinks = [
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   useEffect(() => {
@@ -114,26 +113,8 @@ export function Navbar() {
           {/* Right side actions */}
           <div className="flex items-center gap-2">
             {/* Desktop Search */}
-            <div className={cn("hidden md:flex items-center transition-all duration-300", searchOpen ? "w-64" : "w-auto")}>
-              {searchOpen ? (
-                <div className="relative flex items-center">
-                  <Search className="absolute left-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    autoFocus
-                    placeholder="Search anime, manga..."
-                    className="pl-9 pr-4 h-9 bg-secondary border-border text-sm w-64"
-                    onBlur={() => setSearchOpen(false)}
-                  />
-                </div>
-              ) : (
-                <button
-                  onClick={() => setSearchOpen(true)}
-                  className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  aria-label="Open search"
-                >
-                  <Search className="w-4.5 h-4.5" />
-                </button>
-              )}
+            <div className="hidden md:flex items-center w-64">
+              <SearchAnime />
             </div>
 
             {/* Notifications */}
@@ -166,9 +147,8 @@ export function Navbar() {
           <div className="lg:hidden border-t border-border bg-card/95 backdrop-blur-md">
             <div className="py-4 space-y-1 px-2">
               {/* Mobile Search */}
-              <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search anime, manga..." className="pl-9 bg-secondary border-border" />
+              <div className="relative mb-3 w-full">
+                <SearchAnime />
               </div>
 
               {navLinks.map((link) => (

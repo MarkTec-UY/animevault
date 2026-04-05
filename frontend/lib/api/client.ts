@@ -19,31 +19,40 @@ export async function apiFetch<T = unknown>(
     Accept: "application/json",
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-    credentials: "include", // Include cookies for Sanctum auth
-  })
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+      credentials: "include", // Include cookies for Sanctum auth
+    })
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      const error = new Error("Not found")
-      ;(error as any).status = 404
-      throw error
+    if (!response.ok) {
+      if (response.status === 404) {
+        const error = new Error("Not found")
+        ;(error as any).status = 404
+        throw error
+      }
+      throw new Error(`API error: ${response.status} ${response.statusText}`)
     }
-    throw new Error(`API error: ${response.status} ${response.statusText}`)
-  }
 
-  // Handle empty responses
-  const contentType = response.headers.get("content-type")
-  if (!contentType || !contentType.includes("application/json")) {
-    return {} as T
-  }
+    // Handle empty responses
+    const contentType = response.headers.get("content-type")
+    if (!contentType || !contentType.includes("application/json")) {
+      return {} as T
+    }
 
-  return response.json() as Promise<T>
+    return response.json() as Promise<T>
+  } catch (error) {
+    // Provide better error messages for debugging
+    if (error instanceof TypeError && error.message === "Failed to fetch") {
+      console.error(`Network error: Cannot reach API at ${url}`)
+      console.error(`Make sure the backend is running at ${API_CONFIG.baseUrl}`)
+    }
+    throw error
+  }
 }
 
 /**

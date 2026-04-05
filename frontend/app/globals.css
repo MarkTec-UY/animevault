@@ -103,6 +103,34 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.62 0.1 153 / 0.5);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.62 0.1 153 / 0.8);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: oklch(0.62 0.1 153 / 0.4);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.62 0.1 153 / 0.7);
+  }
 }
 
 @layer utilities {
