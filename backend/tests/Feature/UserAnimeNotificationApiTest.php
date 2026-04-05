@@ -155,6 +155,7 @@ function recreateUserAnimeNotificationApiTables(): void
         $table->string('email')->unique();
         $table->timestamp('email_verified_at')->nullable();
         $table->string('password');
+        $table->string('role')->default('user');
         $table->text('about_me')->nullable();
         $table->string('avatar_path')->nullable();
         $table->string('banner_path')->nullable();

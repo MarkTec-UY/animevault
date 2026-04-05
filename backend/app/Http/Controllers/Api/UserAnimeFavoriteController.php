@@ -39,6 +39,56 @@ class UserAnimeFavoriteController extends Controller
         return response()->json($library->paginateFavorites($user, $request->validated()));
     }
 
+    #[OA\Get(
+        path: '/api/v1/users/{user}/favorites',
+        operationId: 'apiUsersFavoritesIndex',
+        summary: 'Lists another user favorite anime when their profile is public',
+        tags: ['User Favorites'],
+        parameters: [
+            new OA\Parameter(
+                name: 'user',
+                in: 'path',
+                required: true,
+                description: 'User identifier',
+                schema: new OA\Schema(type: 'integer'),
+                example: 3,
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Number of items per page',
+                schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 50, default: 15),
+                example: 15,
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number',
+                schema: new OA\Schema(type: 'integer', minimum: 1, default: 1),
+                example: 1,
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Public user favorites list'),
+            new OA\Response(response: 404, description: 'User profile not found'),
+        ],
+    )]
+    public function publicIndex(
+        IndexUserAnimeFavoritesRequest $request,
+        User $user,
+        UserAnimeLibraryService $library,
+    ): JsonResponse {
+        if (! $user->isProfilePubliclyVisible()) {
+            return response()->json([
+                'message' => 'User profile not found.',
+            ], 404);
+        }
+
+        return response()->json($library->paginateFavorites($user, $request->validated()));
+    }
+
     #[OA\Put(
         path: '/api/v1/me/favorites/{anime}',
         operationId: 'apiMeFavoritesUpsert',

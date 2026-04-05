@@ -111,6 +111,7 @@ function recreateUserAnimeTablePrerequisites(): void
         $table->string('name');
         $table->string('email')->unique();
         $table->string('password');
+        $table->string('role')->default('user');
         $table->text('about_me')->nullable();
         $table->string('avatar_path')->nullable();
         $table->string('banner_path')->nullable();

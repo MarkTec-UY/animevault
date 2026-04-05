@@ -45,6 +45,30 @@ it('updates the authenticated user profile preferences and about me text', funct
         ->preferred_scoring_system->toBe('point_100');
 });
 
+it('rejects timezone values not in the supported timezone list', function () {
+    $user = User::factory()->create();
+
+    Sanctum::actingAs($user);
+
+    $this->putJson('/api/v1/me/profile', [
+        'timezone' => 'Mars/Phobos',
+    ])->assertUnprocessable();
+});
+
+it('provides timezone options in auth me response', function () {
+    $user = User::factory()->create();
+
+    $token = $user->createToken('test-token')->plainTextToken;
+
+    $this->withToken($token)
+        ->getJson('/api/v1/auth/me')
+        ->assertOk()
+        ->assertJsonPath('user.role', 'user')
+        ->assertJsonPath('user.permissions.can_manage_news', false)
+        ->assertJsonPath('timezone_options.0.value', 'Pacific/Pago_Pago')
+        ->assertJsonPath('timezone_options.0.label', '(GMT-11:00) Pago Pago');
+});
+
 it('uploads avatar and banner images for the authenticated user', function () {
     $user = User::factory()->create();
 
@@ -153,6 +177,7 @@ function recreateUserProfileTables(): void
         $table->string('email')->unique();
         $table->timestamp('email_verified_at')->nullable();
         $table->string('password');
+        $table->string('role')->default('user');
         $table->text('about_me')->nullable();
         $table->string('avatar_path')->nullable();
         $table->string('banner_path')->nullable();

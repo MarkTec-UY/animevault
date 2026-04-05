@@ -304,6 +304,92 @@ it('removes a library entry without affecting favorites', function () {
         ->assertJsonPath('is_favorite', true);
 });
 
+it('lists the public library of another user when their profile is public', function () {
+    $user = User::factory()->create([
+        'is_profile_public' => true,
+        'preferred_title_language' => 'romaji',
+    ]);
+
+    createAnimeRecord(500, 24, 'Blue Box', [
+        'romaji' => 'Ao no Hako',
+        'english' => 'Blue Box',
+    ]);
+
+    DB::table('user_anime_library')->insert([
+        'user_id' => $user->id,
+        'anime_id' => 500,
+        'status' => 'watching',
+        'progress_episodes' => 12,
+        'score' => 8,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $response = $this->getJson("/api/v1/users/{$user->id}/library");
+
+    $response->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.anime.id', 500)
+        ->assertJsonPath('data.0.anime.preferred_title', 'Ao no Hako')
+        ->assertJsonPath('data.0.library_entry.status', 'watching');
+});
+
+it('lists the public favorites of another user when their profile is public', function () {
+    $user = User::factory()->create([
+        'is_profile_public' => true,
+    ]);
+
+    createAnimeRecord(600, 12, 'Ping Pong');
+
+    DB::table('user_anime_favorite')->insert([
+        'user_id' => $user->id,
+        'anime_id' => 600,
+        'created_at' => now(),
+    ]);
+
+    $response = $this->getJson("/api/v1/users/{$user->id}/favorites");
+
+    $response->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.anime.id', 600)
+        ->assertJsonPath('data.0.is_favorite', true);
+});
+
+it('hides another user library and favorites when their profile is private', function () {
+    $user = User::factory()->create([
+        'is_profile_public' => false,
+    ]);
+
+    createAnimeRecord(700, 26, 'Cowboy Bebop');
+
+    DB::table('user_anime_library')->insert([
+        'user_id' => $user->id,
+        'anime_id' => 700,
+        'status' => 'completed',
+        'progress_episodes' => 26,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    DB::table('user_anime_favorite')->insert([
+        'user_id' => $user->id,
+        'anime_id' => 700,
+        'created_at' => now(),
+    ]);
+
+    $this->getJson("/api/v1/users/{$user->id}/library")
+        ->assertNotFound()
+        ->assertJson([
+            'message' => 'User profile not found.',
+        ]);
+
+    $this->getJson("/api/v1/users/{$user->id}/favorites")
+        ->assertNotFound()
+        ->assertJson([
+            'message' => 'User profile not found.',
+        ]);
+});
+
 it('uses the user preferred title language and timezone in user anime responses', function () {
     $user = User::factory()->create([
         'timezone' => 'America/Montevideo',
@@ -352,6 +438,7 @@ function recreateUserAnimeApiTables(): void
         $table->string('email')->unique();
         $table->timestamp('email_verified_at')->nullable();
         $table->string('password');
+        $table->string('role')->default('user');
         $table->text('about_me')->nullable();
         $table->string('avatar_path')->nullable();
         $table->string('banner_path')->nullable();

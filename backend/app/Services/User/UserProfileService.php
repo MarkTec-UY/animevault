@@ -55,6 +55,11 @@ class UserProfileService
     {
         return array_merge($this->basePayload($user), [
             'email' => $user->email,
+            'role' => $user->resolvedRole()->value,
+            'permissions' => [
+                'can_manage_news' => $user->canManageNews(),
+                'can_access_editor_panel' => $user->canManageNews(),
+            ],
         ]);
     }
 

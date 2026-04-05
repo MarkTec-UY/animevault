@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApiTokenAbility;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use App\Services\User\UserProfileService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -61,10 +64,13 @@ class AuthController extends Controller
     )]
     public function register(RegisterRequest $request, UserProfileService $profiles): JsonResponse
     {
-        $user = User::query()->create($request->validated());
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $user = User::query()->create([
+            ...$request->validated(),
+            'role' => UserRole::User->value,
+        ]);
+        [$token, $expiresAt] = $this->issueToken($user);
 
-        return response()->json($this->authPayload($profiles, $user, $token), 201);
+        return response()->json($this->authPayload($profiles, $user, $token, $expiresAt), 201);
     }
 
     #[OA\Post(
@@ -128,9 +134,9 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+        [$token, $expiresAt] = $this->issueToken($user);
 
-        return response()->json($this->authPayload($profiles, $user, $token));
+        return response()->json($this->authPayload($profiles, $user, $token, $expiresAt));
     }
 
     #[OA\Get(
@@ -148,6 +154,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'user' => $profiles->authenticatedPayload($request->user()),
+            'timezone_options' => User::timezoneOptions(),
         ]);
     }
 
@@ -172,14 +179,45 @@ class AuthController extends Controller
     }
 
     /**
-     * @return array{user:array<string, mixed>, token:string, token_type:string}
+     * @return array{user:array<string, mixed>, token:string, token_type:string, expires_at:?string}
      */
-    private function authPayload(UserProfileService $profiles, User $user, string $token): array
-    {
+    private function authPayload(
+        UserProfileService $profiles,
+        User $user,
+        string $token,
+        ?CarbonImmutable $expiresAt,
+    ): array {
         return [
             'user' => $profiles->authenticatedPayload($user),
             'token' => $token,
             'token_type' => 'Bearer',
+            'expires_at' => $expiresAt?->toAtomString(),
         ];
+    }
+
+    /**
+     * @return array{0:string, 1:?CarbonImmutable}
+     */
+    private function issueToken(User $user): array
+    {
+        $expiresAt = $this->tokenExpiresAt();
+        $abilities = $user->apiTokenAbilities();
+        $tokenName = in_array(ApiTokenAbility::ManageNews->value, $abilities, true)
+            ? 'editor-auth-token'
+            : 'auth-token';
+        $token = $user->createToken($tokenName, $abilities, $expiresAt)->plainTextToken;
+
+        return [$token, $expiresAt];
+    }
+
+    private function tokenExpiresAt(): ?CarbonImmutable
+    {
+        $ttlInMinutes = (int) config('auth.api_token_ttl_minutes', 10080);
+
+        if ($ttlInMinutes <= 0) {
+            return null;
+        }
+
+        return CarbonImmutable::now()->addMinutes($ttlInMinutes);
     }
 }

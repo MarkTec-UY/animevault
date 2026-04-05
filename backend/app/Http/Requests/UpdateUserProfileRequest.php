@@ -24,7 +24,7 @@ class UpdateUserProfileRequest extends FormRequest
             'banner' => ['sometimes', 'nullable', 'image', 'max:8192'],
             'remove_avatar' => ['sometimes', 'boolean'],
             'remove_banner' => ['sometimes', 'boolean'],
-            'timezone' => ['sometimes', 'string', Rule::in(timezone_identifiers_list())],
+            'timezone' => ['sometimes', 'string', Rule::in(User::allowedTimezones())],
             'is_profile_public' => ['sometimes', 'boolean'],
             'preferred_title_language' => ['sometimes', 'string', Rule::in(User::allowedPreferredTitleLanguages())],
             'preferred_scoring_system' => ['sometimes', 'string', Rule::in(User::allowedPreferredScoringSystems())],

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApiTokenAbility;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,10 +20,32 @@ it('registers a user and returns a sanctum token', function () {
 
     $response->assertCreated()
         ->assertJsonPath('user.email', 'jose@example.com')
+        ->assertJsonPath('user.role', 'user')
+        ->assertJsonPath('user.permissions.can_manage_news', false)
+        ->assertJsonPath('expires_at', fn (?string $value): bool => filled($value))
         ->assertJsonPath('token_type', 'Bearer');
 
     expect(User::query()->count())->toBe(1)
-        ->and(PersonalAccessToken::query()->count())->toBe(1);
+        ->and(PersonalAccessToken::query()->count())->toBe(1)
+        ->and(PersonalAccessToken::query()->sole()->abilities)->toBe([
+            ApiTokenAbility::Authenticated->value,
+        ]);
+});
+
+it('forces newly registered users to keep the default reader role', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Jose',
+        'email' => 'jose@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'role' => 'admin',
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('user.role', 'user')
+        ->assertJsonPath('user.permissions.can_manage_news', false);
+
+    expect(User::query()->sole()->resolvedRole()->value)->toBe('user');
 });
 
 it('logs in a user and returns a sanctum token', function () {
@@ -38,6 +61,7 @@ it('logs in a user and returns a sanctum token', function () {
 
     $response->assertOk()
         ->assertJsonPath('user.id', $user->id)
+        ->assertJsonPath('expires_at', fn (?string $value): bool => filled($value))
         ->assertJsonPath('token_type', 'Bearer');
 
     expect(PersonalAccessToken::query()->count())->toBe(1);
@@ -98,6 +122,120 @@ it('logs out by revoking the current sanctum token', function () {
     expect(PersonalAccessToken::query()->count())->toBe(0);
 });
 
+it('blocks editorial routes for non-editor users', function () {
+    $user = User::factory()->create();
+    $token = $user->createToken('test-token')->plainTextToken;
+
+    $this->withToken($token)
+        ->getJson('/api/v1/editor/session')
+        ->assertForbidden()
+        ->assertJson([
+            'message' => 'You do not have permission to access this resource.',
+        ]);
+});
+
+it('allows editors to access editorial routes', function () {
+    $editor = User::factory()->editor()->create();
+    $loginResponse = $this->postJson('/api/v1/auth/login', [
+        'email' => $editor->email,
+        'password' => 'password',
+    ]);
+
+    $token = $loginResponse->json('token');
+
+    $this->withToken($token)
+        ->getJson('/api/v1/editor/session')
+        ->assertOk()
+        ->assertJsonPath('user.id', $editor->id)
+        ->assertJsonPath('user.role', 'editor')
+        ->assertJsonPath('user.permissions.can_manage_news', true);
+
+    expect(PersonalAccessToken::query()->latest('id')->first()?->abilities)->toContain(
+        ApiTokenAbility::ManageNews->value,
+    );
+});
+
+it('allows admins to access editorial routes', function () {
+    $admin = User::factory()->admin()->create();
+    $token = $admin->createToken('test-token', [
+        ApiTokenAbility::Authenticated->value,
+        ApiTokenAbility::ManageNews->value,
+    ])->plainTextToken;
+
+    $this->withToken($token)
+        ->getJson('/api/v1/editor/session')
+        ->assertOk()
+        ->assertJsonPath('user.id', $admin->id)
+        ->assertJsonPath('user.role', 'admin')
+        ->assertJsonPath('user.permissions.can_manage_news', true);
+});
+
+it('blocks editor routes when the token lacks editorial abilities', function () {
+    $editor = User::factory()->editor()->create();
+    $token = $editor->createToken('test-token', [
+        ApiTokenAbility::Authenticated->value,
+    ])->plainTextToken;
+
+    $this->withToken($token)
+        ->getJson('/api/v1/editor/session')
+        ->assertForbidden()
+        ->assertJson([
+            'message' => 'You do not have permission to access this resource.',
+        ]);
+});
+
+it('blocks editor routes when an old editor token belongs to a downgraded user', function () {
+    $editor = User::factory()->editor()->create();
+    $token = $editor->createToken('test-token', [
+        ApiTokenAbility::Authenticated->value,
+        ApiTokenAbility::ManageNews->value,
+    ])->plainTextToken;
+
+    User::query()
+        ->whereKey($editor->id)
+        ->update([
+            'role' => 'user',
+        ]);
+
+    $this->withToken($token)
+        ->getJson('/api/v1/editor/session')
+        ->assertForbidden()
+        ->assertJson([
+            'message' => 'You do not have permission to access this resource.',
+        ]);
+});
+
+it('rate limits repeated login attempts', function () {
+    User::factory()->create([
+        'email' => 'jose@example.com',
+        'password' => 'password123',
+    ]);
+
+    foreach (range(1, 5) as $attempt) {
+        $this->postJson('/api/v1/auth/login', [
+            'email' => 'jose@example.com',
+            'password' => 'wrong-password',
+        ])->assertUnauthorized();
+    }
+
+    $this->postJson('/api/v1/auth/login', [
+        'email' => 'jose@example.com',
+        'password' => 'wrong-password',
+    ])->assertStatus(429)
+        ->assertJson([
+            'message' => 'Too many login attempts. Please try again in a minute.',
+        ]);
+});
+
+it('adds baseline security headers to api responses', function () {
+    $this->getJson('/api/v1/ping')
+        ->assertOk()
+        ->assertHeader('X-Content-Type-Options', 'nosniff')
+        ->assertHeader('X-Frame-Options', 'DENY')
+        ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+        ->assertHeader('Permissions-Policy', 'camera=(), geolocation=(), microphone=()');
+});
+
 function recreateAuthTables(): void
 {
     Schema::disableForeignKeyConstraints();
@@ -111,6 +249,7 @@ function recreateAuthTables(): void
         $table->string('email')->unique();
         $table->timestamp('email_verified_at')->nullable();
         $table->string('password');
+        $table->string('role')->default('user');
         $table->text('about_me')->nullable();
         $table->string('avatar_path')->nullable();
         $table->string('banner_path')->nullable();

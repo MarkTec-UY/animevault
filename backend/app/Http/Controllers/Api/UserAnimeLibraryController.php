@@ -41,6 +41,69 @@ class UserAnimeLibraryController extends Controller
     }
 
     #[OA\Get(
+        path: '/api/v1/users/{user}/library',
+        operationId: 'apiUsersLibraryIndex',
+        summary: 'Lists another user anime library when their profile is public',
+        tags: ['User Library'],
+        parameters: [
+            new OA\Parameter(
+                name: 'user',
+                in: 'path',
+                required: true,
+                description: 'User identifier',
+                schema: new OA\Schema(type: 'integer'),
+                example: 3,
+            ),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filters by one or more library statuses. Use comma-separated values.',
+                style: 'form',
+                explode: false,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string')
+                ),
+                example: ['watching', 'completed'],
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Number of items per page',
+                schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 50, default: 15),
+                example: 15,
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number',
+                schema: new OA\Schema(type: 'integer', minimum: 1, default: 1),
+                example: 1,
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Public user library list'),
+            new OA\Response(response: 404, description: 'User profile not found'),
+        ],
+    )]
+    public function publicIndex(
+        IndexUserAnimeLibraryRequest $request,
+        User $user,
+        UserAnimeLibraryService $library,
+    ): JsonResponse {
+        if (! $user->isProfilePubliclyVisible()) {
+            return response()->json([
+                'message' => 'User profile not found.',
+            ], 404);
+        }
+
+        return response()->json($library->paginateLibrary($user, $request->validated()));
+    }
+
+    #[OA\Get(
         path: '/api/v1/me/anime/{anime}',
         operationId: 'apiMeAnimeState',
         summary: 'Gets the authenticated user state for a specific anime',
