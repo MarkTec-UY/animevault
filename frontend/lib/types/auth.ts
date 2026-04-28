@@ -9,13 +9,13 @@ export interface LoginCredentials {
 }
 
 export interface RegisterCredentials extends LoginCredentials {
-  name: string
+  username: string
   password_confirmation: string
 }
 
 export interface User {
   id: number
-  name: string
+  username: string
   email: string
   avatar?: string
   createdAt: string

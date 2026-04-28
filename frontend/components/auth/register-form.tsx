@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function RegisterForm() {
-  const [name, setName] = useState("")
+  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
@@ -22,7 +22,7 @@ export function RegisterForm() {
       return
     }
     register({
-      name,
+      username,
       email,
       password,
       password_confirmation: passwordConfirmation,
@@ -48,16 +48,16 @@ export function RegisterForm() {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre</Label>
+        <Label htmlFor="username">Nombre de usuario</Label>
         <Input
-          id="name"
+          id="username"
           type="text"
-          placeholder="Tu nombre"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          placeholder="JoseVCF"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
           disabled={isRegisterPending}
-          autoComplete="name"
+          autoComplete="username"
         />
       </div>
 

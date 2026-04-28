@@ -37,6 +37,13 @@ export const API_CONFIG = {
       library: (id: number | string) => `/api/v1/users/${id}/library`,
       favorites: (id: number | string) => `/api/v1/users/${id}/favorites`,
     },
+    // Current User
+    me: {
+      profile: "/api/v1/me/profile",
+      library: "/api/v1/me/library",
+      favorites: "/api/v1/me/favorites",
+      anime: (id: number | string) => `/api/v1/me/anime/${id}`,
+    },
   },
 
   /**

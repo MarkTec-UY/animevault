@@ -19,8 +19,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
     name: 'User Library',
     description: 'Authenticated user anime tracking and favorites',
 )]
+
 class UserAnimeLibraryController extends Controller
-{
+{   
+
     public function __construct()
     {
         $this->middleware('auth:sanctum')->except(['publicIndex']);
@@ -57,9 +59,9 @@ class UserAnimeLibraryController extends Controller
                 name: 'user',
                 in: 'path',
                 required: true,
-                description: 'User identifier',
-                schema: new OA\Schema(type: 'integer'),
-                example: 3,
+                description: 'User username',
+                schema: new OA\Schema(type: 'string'),
+                example: 'JoseVCF',
             ),
             new OA\Parameter(
                 name: 'status',
@@ -98,12 +100,13 @@ class UserAnimeLibraryController extends Controller
     )]
     public function publicIndex(
         IndexUserAnimeLibraryRequest $request,
-        User $user,
+        string $user,
         UserAnimeLibraryService $library,
     ): JsonResponse {
-        $this->authorize('viewLibrary', $user);
+        $userModel = User::where('username', $user)->firstOrFail();
+        $this->authorize('viewLibrary', $userModel);
 
-        return response()->json($library->paginateLibrary($user, $request->validated()));
+        return response()->json($library->paginateLibrary($userModel, $request->validated()));
     }
 
     #[OA\Get(

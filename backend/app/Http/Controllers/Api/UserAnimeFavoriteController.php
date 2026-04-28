@@ -54,9 +54,9 @@ class UserAnimeFavoriteController extends Controller
                 name: 'user',
                 in: 'path',
                 required: true,
-                description: 'User identifier',
-                schema: new OA\Schema(type: 'integer'),
-                example: 3,
+                description: 'User username',
+                schema: new OA\Schema(type: 'string'),
+                example: 'JoseVCF',
             ),
             new OA\Parameter(
                 name: 'per_page',
@@ -82,12 +82,13 @@ class UserAnimeFavoriteController extends Controller
     )]
     public function publicIndex(
         IndexUserAnimeFavoritesRequest $request,
-        User $user,
+        string $user,
         UserAnimeLibraryService $library,
     ): JsonResponse {
-        $this->authorize('viewFavorites', $user);
+        $userModel = User::where('username', $user)->firstOrFail();
+        $this->authorize('viewFavorites', $userModel);
 
-        return response()->json($library->paginateFavorites($user, $request->validated()));
+        return response()->json($library->paginateFavorites($userModel, $request->validated()));
     }
 
     #[OA\Put(

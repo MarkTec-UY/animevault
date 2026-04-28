@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, DM_Serif_Display, Noto_Sans_JP } from 'next/font/google'
+import { Inter, DM_Serif_Display, Noto_Sans_JP, Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from './providers'
 import './globals.css'
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({
   subsets: ['latin'],
@@ -49,7 +52,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={cn("dark", "font-sans", geist.variable)}>
       <body className={`${inter.variable} ${dmSerifDisplay.variable} ${notoSansJP.variable} font-sans antialiased`}>
         <Providers>
           {children}

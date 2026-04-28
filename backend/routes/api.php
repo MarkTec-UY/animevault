@@ -56,13 +56,13 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::get('/users/{user}/library', [UserAnimeLibraryController::class, 'publicIndex'])
-        ->whereNumber('user')
+        ->where('user', '[a-zA-Z0-9_-]+')
         ->name('api.users.library.index');
     Route::get('/users/{user}/favorites', [UserAnimeFavoriteController::class, 'publicIndex'])
-        ->whereNumber('user')
+        ->where('user', '[a-zA-Z0-9_-]+')
         ->name('api.users.favorites.index');
     Route::get('/users/{user}', [UserProfileController::class, 'show'])
-        ->whereNumber('user')
+        ->where('user', '[a-zA-Z0-9_-]+')
         ->name('api.users.show');
     Route::prefix('editor')->middleware(['auth:sanctum', 'manage-news'])->group(function (): void {
         Route::get('/session', EditorSessionController::class)->name('api.editor.session');

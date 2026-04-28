@@ -78,7 +78,7 @@ class UserProfileService
     {
         return [
             'id' => (int) $user->id,
-            'name' => $user->name,
+            'username' => $user->username,
             'about_me' => $user->about_me,
             'avatar_url' => $user->avatarUrl(),
             'banner_url' => $user->bannerUrl(),

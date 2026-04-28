@@ -78,9 +78,9 @@ class UserProfileController extends Controller
                 name: 'user',
                 in: 'path',
                 required: true,
-                description: 'User identifier',
-                schema: new OA\Schema(type: 'integer'),
-                example: 3,
+                description: 'User username',
+                schema: new OA\Schema(type: 'string'),
+                example: 'JoseVCF',
             ),
         ],
         responses: [
@@ -88,12 +88,13 @@ class UserProfileController extends Controller
             new OA\Response(response: 404, description: 'User profile not found'),
         ],
     )]
-    public function show(User $user, UserProfileService $profiles): JsonResponse
+    public function show(string $user, UserProfileService $profiles): JsonResponse
     {
-        $this->authorize('view', $user);
+        $userModel = User::where('username', $user)->firstOrFail();
+        $this->authorize('view', $userModel);
 
         return response()->json([
-            'user' => $profiles->publicPayload($user),
+            'user' => $profiles->publicPayload($userModel),
         ]);
     }
 }

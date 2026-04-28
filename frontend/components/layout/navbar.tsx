@@ -124,10 +124,19 @@ export function Navbar() {
             </button>
 
             {/* Auth Buttons */}
-            <Button variant="ghost" size="sm" className="hidden sm:inline-flex text-muted-foreground hover:text-foreground">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
+            >
               <Link href="/login">Sign In</Link>
             </Button>
-            <Button size="sm" className="hidden sm:inline-flex bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button
+              asChild
+              size="sm"
+              className="hidden sm:inline-flex bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
               <Link href="/register">Get Started</Link>
             </Button>
 
@@ -179,10 +188,10 @@ export function Navbar() {
               ))}
 
               <div className="flex gap-2 pt-3 border-t border-border mt-2">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button asChild variant="outline" size="sm" className="flex-1">
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90">
+                <Button asChild size="sm" className="flex-1 bg-primary hover:bg-primary/90">
                   <Link href="/register">Get Started</Link>
                 </Button>
               </div>

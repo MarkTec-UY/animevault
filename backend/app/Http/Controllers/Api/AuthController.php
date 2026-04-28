@@ -35,9 +35,9 @@ class AuthController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['name', 'email', 'password', 'password_confirmation'],
+                required: ['username', 'email', 'password', 'password_confirmation'],
                 properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Jose'),
+                    new OA\Property(property: 'username', type: 'string', example: 'JoseVCF'),
                     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'jose@example.com'),
                     new OA\Property(property: 'password', type: 'string', format: 'password', example: 'password123'),
                     new OA\Property(property: 'password_confirmation', type: 'string', format: 'password', example: 'password123'),
@@ -55,7 +55,7 @@ class AuthController extends Controller
                             property: 'user',
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
-                                new OA\Property(property: 'name', type: 'string', example: 'Jose'),
+                                new OA\Property(property: 'username', type: 'string', example: 'JoseVCF'),
                                 new OA\Property(property: 'email', type: 'string', format: 'email', example: 'jose@example.com'),
                             ],
                             type: 'object',
@@ -105,7 +105,7 @@ class AuthController extends Controller
                             property: 'user',
                             properties: [
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
-                                new OA\Property(property: 'name', type: 'string', example: 'Jose'),
+                                new OA\Property(property: 'username', type: 'string', example: 'JoseVCF'),
                                 new OA\Property(property: 'email', type: 'string', format: 'email', example: 'jose@example.com'),
                             ],
                             type: 'object',
