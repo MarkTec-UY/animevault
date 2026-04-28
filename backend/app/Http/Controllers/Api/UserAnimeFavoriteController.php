@@ -18,6 +18,11 @@ use OpenApi\Attributes as OA;
 )]
 class UserAnimeFavoriteController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->except(['publicIndex']);
+    }
+
     #[OA\Get(
         path: '/api/v1/me/favorites',
         operationId: 'apiMeFavoritesIndex',
@@ -80,11 +85,7 @@ class UserAnimeFavoriteController extends Controller
         User $user,
         UserAnimeLibraryService $library,
     ): JsonResponse {
-        if (! $user->isProfilePubliclyVisible()) {
-            return response()->json([
-                'message' => 'User profile not found.',
-            ], 404);
-        }
+        $this->authorize('viewFavorites', $user);
 
         return response()->json($library->paginateFavorites($user, $request->validated()));
     }
@@ -116,8 +117,11 @@ class UserAnimeFavoriteController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('manageFavorites', $user);
+
         $favorite = $library->addFavorite($user, $anime);
-        $statusCode = $favorite->wasRecentlyCreated ? 201 : 200;
+        $statusCode = $favorite->wasRecentlyCreated ? Response::HTTP_CREATED : Response::HTTP_OK;
 
         return response()->json($library->state($user, $anime), $statusCode);
     }
@@ -148,6 +152,8 @@ class UserAnimeFavoriteController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('manageFavorites', $user);
 
         $library->removeFavorite($user, $anime);
 

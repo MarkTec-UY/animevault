@@ -8,10 +8,12 @@ use App\Http\Requests\UpsertUserAnimeLibraryRequest;
 use App\Models\Anime;
 use App\Models\User;
 use App\Services\User\UserAnimeLibraryService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 #[OA\Tag(
     name: 'User Library',
@@ -19,6 +21,11 @@ use OpenApi\Attributes as OA;
 )]
 class UserAnimeLibraryController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->except(['publicIndex']);
+    }
+
     #[OA\Get(
         path: '/api/v1/me/library',
         operationId: 'apiMeLibraryIndex',
@@ -94,11 +101,7 @@ class UserAnimeLibraryController extends Controller
         User $user,
         UserAnimeLibraryService $library,
     ): JsonResponse {
-        if (! $user->isProfilePubliclyVisible()) {
-            return response()->json([
-                'message' => 'User profile not found.',
-            ], 404);
-        }
+        $this->authorize('viewLibrary', $user);
 
         return response()->json($library->paginateLibrary($user, $request->validated()));
     }
@@ -178,8 +181,11 @@ class UserAnimeLibraryController extends Controller
     ): JsonResponse {
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('manageLibrary', $user);
+
         $entry = $library->upsert($user, $anime, $request->validated());
-        $statusCode = $entry->wasRecentlyCreated ? 201 : 200;
+        $statusCode = $entry->wasRecentlyCreated ? Response::HTTP_CREATED : Response::HTTP_OK;
         $state = $library->state($user, $anime);
 
         return response()->json([
@@ -214,6 +220,8 @@ class UserAnimeLibraryController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('manageLibrary', $user);
 
         $library->remove($user, $anime);
 

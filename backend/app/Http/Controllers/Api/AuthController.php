@@ -13,7 +13,10 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 #[OA\Tag(
     name: 'Auth',
@@ -21,6 +24,9 @@ use OpenApi\Attributes as OA;
 )]
 class AuthController extends Controller
 {
+    private const int MAX_LOGIN_ATTEMPTS = 5;
+    private const int LOGIN_DECAY_SECONDS = 60;
+
     #[OA\Post(
         path: '/api/v1/auth/register',
         operationId: 'apiAuthRegister',
@@ -70,7 +76,7 @@ class AuthController extends Controller
         ]);
         [$token, $expiresAt] = $this->issueToken($user);
 
-        return response()->json($this->authPayload($profiles, $user, $token, $expiresAt), 201);
+        return response()->json($this->authPayload($profiles, $user, $token, $expiresAt), Response::HTTP_CREATED);
     }
 
     #[OA\Post(
@@ -120,19 +126,35 @@ class AuthController extends Controller
                     type: 'object',
                 ),
             ),
+            new OA\Response(
+                response: 429,
+                description: 'Too many login attempts',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Too many login attempts. Please try again later.'),
+                    ],
+                    type: 'object',
+                ),
+            ),
         ],
     )]
     public function login(LoginRequest $request, UserProfileService $profiles): JsonResponse
     {
+        $this->ensureNotRateLimited($request);
+
         $user = User::query()
             ->where('email', $request->string('email'))
             ->first();
 
         if ($user === null || ! Hash::check($request->string('password'), $user->password)) {
-            return response()->json([
-                'message' => 'The provided credentials are incorrect.',
-            ], 401);
+            RateLimiter::hit($this->throttleKey($request));
+
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
         }
+
+        RateLimiter::clear($this->throttleKey($request));
 
         [$token, $expiresAt] = $this->issueToken($user);
 
@@ -152,8 +174,13 @@ class AuthController extends Controller
     )]
     public function me(Request $request, UserProfileService $profiles): JsonResponse
     {
+        $user = $request->user();
+        if ($user === null) {
+            return response()->json(['message' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         return response()->json([
-            'user' => $profiles->authenticatedPayload($request->user()),
+            'user' => $profiles->authenticatedPayload($user),
             'timezone_options' => User::timezoneOptions(),
         ]);
     }
@@ -171,7 +198,10 @@ class AuthController extends Controller
     )]
     public function logout(Request $request): JsonResponse
     {
-        $request->user()?->currentAccessToken()?->delete();
+        $user = $request->user();
+        if ($user !== null) {
+            $user->currentAccessToken()?->delete();
+        }
 
         return response()->json([
             'message' => 'Logged out successfully.',
@@ -219,5 +249,26 @@ class AuthController extends Controller
         }
 
         return CarbonImmutable::now()->addMinutes($ttlInMinutes);
+    }
+
+    private function ensureNotRateLimited(Request $request): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey($request), self::MAX_LOGIN_ATTEMPTS)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->throttleKey($request));
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    private function throttleKey(Request $request): string
+    {
+        return strtolower($request->input('email')).'|'.$request->ip();
     }
 }

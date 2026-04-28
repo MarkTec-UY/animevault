@@ -7,7 +7,9 @@ use App\Http\Requests\UpdateUserProfileRequest;
 use App\Models\User;
 use App\Services\User\UserProfileService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 #[OA\Tag(
     name: 'User Profile',
@@ -15,6 +17,11 @@ use OpenApi\Attributes as OA;
 )]
 class UserProfileController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->only(['update']);
+    }
+
     #[OA\Put(
         path: '/api/v1/me/profile',
         operationId: 'apiMeProfileUpdate',
@@ -49,7 +56,12 @@ class UserProfileController extends Controller
     )]
     public function update(UpdateUserProfileRequest $request, UserProfileService $profiles): JsonResponse
     {
-        $user = $profiles->update($request->user(), $request->validated());
+        /** @var User $user */
+        $user = $request->user();
+
+        $this->authorize('updateProfile', $user);
+
+        $user = $profiles->update($user, $request->validated());
 
         return response()->json([
             'user' => $profiles->authenticatedPayload($user),
@@ -78,11 +90,7 @@ class UserProfileController extends Controller
     )]
     public function show(User $user, UserProfileService $profiles): JsonResponse
     {
-        if (! $user->isProfilePubliclyVisible()) {
-            return response()->json([
-                'message' => 'User profile not found.',
-            ], 404);
-        }
+        $this->authorize('view', $user);
 
         return response()->json([
             'user' => $profiles->publicPayload($user),

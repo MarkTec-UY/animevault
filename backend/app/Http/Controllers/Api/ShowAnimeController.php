@@ -7,6 +7,7 @@ use App\Services\Anime\AnimeCatalogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 #[OA\Tag(
     name: 'Anime',
@@ -73,7 +74,7 @@ class ShowAnimeController extends Controller
         if ($anime === null) {
             return response()->json([
                 'message' => 'Anime not found.',
-            ], 404);
+            ], Response::HTTP_NOT_FOUND);
         }
 
         return response()->json($anime);
