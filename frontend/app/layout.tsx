@@ -5,8 +5,6 @@ import { Providers } from './providers'
 import './globals.css'
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
@@ -52,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn("dark", "font-sans", geist.variable)}>
+    <html lang="en" className={cn("dark", "font-sans", inter.variable)}>
       <body className={`${inter.variable} ${dmSerifDisplay.variable} ${notoSansJP.variable} font-sans antialiased`}>
         <Providers>
           {children}
