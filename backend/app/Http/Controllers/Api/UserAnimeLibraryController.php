@@ -20,11 +20,6 @@ use OpenApi\Attributes as OA;
 
 class UserAnimeLibraryController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:sanctum')->except(['publicIndex']);
-    }
-
     #[OA\Get(
         path: '/api/v1/me/library',
         operationId: 'apiMeLibraryIndex',
@@ -101,7 +96,13 @@ class UserAnimeLibraryController extends Controller
         UserAnimeLibraryService $library,
     ): JsonResponse {
         $userModel = User::where('username', $user)->firstOrFail();
-        $this->authorize('viewLibrary', $userModel);
+
+        $viewerId = $request->header('X-Viewer-Id');
+        $isOwner = $viewerId && (int) $viewerId === $userModel->id;
+
+        if (! $userModel->isProfilePubliclyVisible() && ! $isOwner) {
+            abort(403, 'This profile is private.');
+        }
 
         return response()->json($library->paginateLibrary($userModel, $request->validated()));
     }

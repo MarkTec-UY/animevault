@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\ApiTokenAbility;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use App\Services\User\UserProfileService;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -26,12 +24,10 @@ class AuthController extends Controller
 {
     private const int MAX_LOGIN_ATTEMPTS = 5;
 
-    private const int LOGIN_DECAY_SECONDS = 60;
-
     #[OA\Post(
         path: '/api/v1/auth/register',
         operationId: 'apiAuthRegister',
-        summary: 'Registers a new user and returns a Sanctum token',
+        summary: 'Registers a new user and authenticates via session',
         tags: ['Auth'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -61,8 +57,6 @@ class AuthController extends Controller
                             ],
                             type: 'object',
                         ),
-                        new OA\Property(property: 'token', type: 'string', example: '1|sanctum-token-example'),
-                        new OA\Property(property: 'token_type', type: 'string', example: 'Bearer'),
                     ],
                     type: 'object',
                 ),
@@ -75,15 +69,16 @@ class AuthController extends Controller
             ...$request->validated(),
             'role' => UserRole::User->value,
         ]);
-        [$token, $expiresAt] = $this->issueToken($user);
 
-        return response()->json($this->authPayload($profiles, $user, $token, $expiresAt), Response::HTTP_CREATED);
+        auth()->login($user);
+
+        return response()->json($this->authPayload($profiles, $user), Response::HTTP_CREATED);
     }
 
     #[OA\Post(
         path: '/api/v1/auth/login',
         operationId: 'apiAuthLogin',
-        summary: 'Authenticates a user and returns a Sanctum token',
+        summary: 'Authenticates a user via session',
         tags: ['Auth'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -111,8 +106,6 @@ class AuthController extends Controller
                             ],
                             type: 'object',
                         ),
-                        new OA\Property(property: 'token', type: 'string', example: '1|sanctum-token-example'),
-                        new OA\Property(property: 'token_type', type: 'string', example: 'Bearer'),
                     ],
                     type: 'object',
                 ),
@@ -157,9 +150,9 @@ class AuthController extends Controller
 
         RateLimiter::clear($this->throttleKey($request));
 
-        [$token, $expiresAt] = $this->issueToken($user);
+        auth()->login($user);
 
-        return response()->json($this->authPayload($profiles, $user, $token, $expiresAt));
+        return response()->json($this->authPayload($profiles, $user));
     }
 
     #[OA\Get(
@@ -189,20 +182,17 @@ class AuthController extends Controller
     #[OA\Post(
         path: '/api/v1/auth/logout',
         operationId: 'apiAuthLogout',
-        summary: 'Revokes the current Sanctum token',
+        summary: 'Logs out the authenticated user',
         tags: ['Auth'],
         security: [['sanctumBearerAuth' => []]],
         responses: [
-            new OA\Response(response: 200, description: 'Token revoked'),
+            new OA\Response(response: 200, description: 'Logged out'),
             new OA\Response(response: 401, description: 'Unauthenticated'),
         ],
     )]
     public function logout(Request $request): JsonResponse
     {
-        $user = $request->user();
-        if ($user !== null) {
-            $user->currentAccessToken()?->delete();
-        }
+        auth()->logout();
 
         return response()->json([
             'message' => 'Logged out successfully.',
@@ -210,46 +200,13 @@ class AuthController extends Controller
     }
 
     /**
-     * @return array{user:array<string, mixed>, token:string, token_type:string, expires_at:?string}
+     * @return array{user:array<string, mixed>}
      */
-    private function authPayload(
-        UserProfileService $profiles,
-        User $user,
-        string $token,
-        ?CarbonImmutable $expiresAt,
-    ): array {
+    private function authPayload(UserProfileService $profiles, User $user): array
+    {
         return [
             'user' => $profiles->authenticatedPayload($user),
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'expires_at' => $expiresAt?->toAtomString(),
         ];
-    }
-
-    /**
-     * @return array{0:string, 1:?CarbonImmutable}
-     */
-    private function issueToken(User $user): array
-    {
-        $expiresAt = $this->tokenExpiresAt();
-        $abilities = $user->apiTokenAbilities();
-        $tokenName = in_array(ApiTokenAbility::ManageNews->value, $abilities, true)
-            ? 'editor-auth-token'
-            : 'auth-token';
-        $token = $user->createToken($tokenName, $abilities, $expiresAt)->plainTextToken;
-
-        return [$token, $expiresAt];
-    }
-
-    private function tokenExpiresAt(): ?CarbonImmutable
-    {
-        $ttlInMinutes = (int) config('auth.api_token_ttl_minutes', 10080);
-
-        if ($ttlInMinutes <= 0) {
-            return null;
-        }
-
-        return CarbonImmutable::now()->addMinutes($ttlInMinutes);
     }
 
     private function ensureNotRateLimited(Request $request): void

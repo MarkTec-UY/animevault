@@ -71,7 +71,7 @@ export const userAPI = {
       formData.append("remove_banner", "true")
     }
 
-    const response = await apiFetch<UserProfileResponse>("/api/v1/me/profile", {
+    const response = await apiFetch<UserProfileResponse>("/auth/profile", {
       method: "PUT",
       body: formData,
       headers: {

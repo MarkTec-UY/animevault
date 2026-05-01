@@ -20,7 +20,6 @@ return Application::configure(basePath: dirname(__DIR__))
         __DIR__.'/../app/Console/Commands',
     ])
     ->withMiddleware(function (Middleware $middleware): void {
-        // Add CORS middleware first
         $middleware->append(HandleCors::class);
 
         $middleware->append(AddSecurityHeaders::class);

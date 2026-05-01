@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { fetchAnimeById } from "@/lib/api/anime"
 import { getAnimeUrlFromIdAndTitle, titleToSlug } from "@/lib/utils/anime-urls"
 import { sanitizeHtml } from "@/lib/utils/text"
-import { Navbar } from "@/components/layout/navbar"
 import { Footer } from "@/components/layout/footer"
 import { AnimeHero } from "@/components/anime/anime-hero"
 import { AnimeSidebar } from "@/components/anime/anime-sidebar"
@@ -71,7 +70,6 @@ export default async function AnimePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
 
       <main>
         {/* Hero (banner + poster + title + actions) */}

@@ -18,11 +18,6 @@ use OpenApi\Attributes as OA;
 )]
 class UserAnimeFavoriteController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:sanctum')->except(['publicIndex']);
-    }
-
     #[OA\Get(
         path: '/api/v1/me/favorites',
         operationId: 'apiMeFavoritesIndex',
@@ -86,7 +81,13 @@ class UserAnimeFavoriteController extends Controller
         UserAnimeLibraryService $library,
     ): JsonResponse {
         $userModel = User::where('username', $user)->firstOrFail();
-        $this->authorize('viewFavorites', $userModel);
+
+        $viewerId = $request->header('X-Viewer-Id');
+        $isOwner = $viewerId && (int) $viewerId === $userModel->id;
+
+        if (! $userModel->isProfilePubliclyVisible() && ! $isOwner) {
+            abort(403, 'This profile is private.');
+        }
 
         return response()->json($library->paginateFavorites($userModel, $request->validated()));
     }

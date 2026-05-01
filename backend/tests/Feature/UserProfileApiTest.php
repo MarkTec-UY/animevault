@@ -20,7 +20,7 @@ it('updates the authenticated user profile preferences and about me text', funct
         'preferred_scoring_system' => 'point_10',
     ]);
 
-    Sanctum::actingAs($user);
+    $this->actingAs($user);
 
     $response = $this->putJson('/api/v1/me/profile', [
         'about_me' => 'I collect retro anime VHS tapes.',
@@ -48,7 +48,7 @@ it('updates the authenticated user profile preferences and about me text', funct
 it('rejects timezone values not in the supported timezone list', function () {
     $user = User::factory()->create();
 
-    Sanctum::actingAs($user);
+    $this->actingAs($user);
 
     $this->putJson('/api/v1/me/profile', [
         'timezone' => 'Mars/Phobos',
@@ -58,9 +58,7 @@ it('rejects timezone values not in the supported timezone list', function () {
 it('provides timezone options in auth me response', function () {
     $user = User::factory()->create();
 
-    $token = $user->createToken('test-token')->plainTextToken;
-
-    $this->withToken($token)
+    $this->actingAs($user)
         ->getJson('/api/v1/auth/me')
         ->assertOk()
         ->assertJsonPath('user.role', 'user')
@@ -72,7 +70,7 @@ it('provides timezone options in auth me response', function () {
 it('uploads avatar and banner images for the authenticated user', function () {
     $user = User::factory()->create();
 
-    Sanctum::actingAs($user);
+    $this->actingAs($user);
 
     $response = $this->put('/api/v1/me/profile', [
         'avatar' => UploadedFile::fake()->image('avatar.jpg', 256, 256),
@@ -100,7 +98,7 @@ it('removes existing avatar and banner images when requested', function () {
     Storage::disk('public')->put($user->avatar_path, 'avatar');
     Storage::disk('public')->put($user->banner_path, 'banner');
 
-    Sanctum::actingAs($user);
+    $this->actingAs($user);
 
     $response = $this->putJson('/api/v1/me/profile', [
         'remove_avatar' => true,
@@ -121,7 +119,7 @@ it('removes existing avatar and banner images when requested', function () {
 
 it('returns public profiles and hides private ones', function () {
     $publicUser = User::factory()->create([
-        'name' => 'Jose',
+        'username' => 'Jose',
         'about_me' => 'Watching seasonal anime every week.',
         'is_profile_public' => true,
     ]);
@@ -132,7 +130,7 @@ it('returns public profiles and hides private ones', function () {
 
     $this->getJson("/api/v1/users/{$publicUser->id}")
         ->assertOk()
-        ->assertJsonPath('user.name', 'Jose')
+        ->assertJsonPath('user.username', 'Jose')
         ->assertJsonPath('user.about_me', 'Watching seasonal anime every week.')
         ->assertJsonMissingPath('user.email');
 
@@ -152,9 +150,7 @@ it('returns profile preferences in auth me responses', function () {
         'preferred_scoring_system' => 'star_5',
     ]);
 
-    $token = $user->createToken('test-token')->plainTextToken;
-
-    $this->withToken($token)
+    $this->actingAs($user)
         ->getJson('/api/v1/auth/me')
         ->assertOk()
         ->assertJsonPath('user.about_me', 'Blue Box enjoyer.')
@@ -173,7 +169,7 @@ function recreateUserProfileTables(): void
 
     Schema::create('users', function (Blueprint $table): void {
         $table->id();
-        $table->string('name');
+        $table->string('username');
         $table->string('email')->unique();
         $table->timestamp('email_verified_at')->nullable();
         $table->string('password');

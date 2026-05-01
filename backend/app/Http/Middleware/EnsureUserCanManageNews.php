@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\ApiTokenAbility;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,14 +20,6 @@ class EnsureUserCanManageNews
         }
 
         if (! $user->canManageNews()) {
-            return new JsonResponse([
-                'message' => 'You do not have permission to access this resource.',
-            ], 403);
-        }
-
-        $token = $user->currentAccessToken();
-
-        if ($token !== null && ! $token->can(ApiTokenAbility::ManageNews->value)) {
             return new JsonResponse([
                 'message' => 'You do not have permission to access this resource.',
             ], 403);

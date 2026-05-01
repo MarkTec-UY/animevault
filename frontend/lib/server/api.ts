@@ -14,11 +14,16 @@ export async function apiFetchServer<T = unknown>(
   const headerStore = await headers()
 
   const cookieString = cookieStore.toString()
+  console.log('[apiFetchServer] cookies:', cookieString)
+  console.log('[apiFetchServer] endpoint:', endpoint)
 
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    Cookie: cookieString,
+  }
+
+  if (cookieString) {
+    defaultHeaders['Cookie'] = cookieString
   }
 
   const origin = headerStore.get('origin') || API_BASE_URL
@@ -36,10 +41,10 @@ export async function apiFetchServer<T = unknown>(
         ...defaultHeaders,
         ...options.headers,
       },
-      credentials: 'include',
     })
 
     if (!response.ok) {
+      const errorBody = await response.text()
       if (response.status === 401) {
         throw new Error('Unauthorized')
       }

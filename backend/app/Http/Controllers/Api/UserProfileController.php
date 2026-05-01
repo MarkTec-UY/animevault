@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateUserProfileRequest;
 use App\Models\User;
 use App\Services\User\UserProfileService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(
@@ -15,11 +16,6 @@ use OpenApi\Attributes as OA;
 )]
 class UserProfileController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:sanctum')->only(['update']);
-    }
-
     #[OA\Put(
         path: '/api/v1/me/profile',
         operationId: 'apiMeProfileUpdate',
@@ -86,10 +82,16 @@ class UserProfileController extends Controller
             new OA\Response(response: 404, description: 'User profile not found'),
         ],
     )]
-    public function show(string $user, UserProfileService $profiles): JsonResponse
+    public function show(Request $request, string $user, UserProfileService $profiles): JsonResponse
     {
         $userModel = User::where('username', $user)->firstOrFail();
-        $this->authorize('view', $userModel);
+
+        $viewerId = $request->header('X-Viewer-Id');
+        $isOwner = $viewerId && (int) $viewerId === $userModel->id;
+
+        if (! $userModel->isProfilePubliclyVisible() && ! $isOwner) {
+            abort(403, 'This profile is private.');
+        }
 
         return response()->json([
             'user' => $profiles->publicPayload($userModel),

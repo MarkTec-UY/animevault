@@ -21,13 +21,13 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/login', [AuthController::class, 'login'])
             ->middleware('throttle:auth-login')
             ->name('api.auth.login');
-        Route::middleware('auth:sanctum')->group(function (): void {
+        Route::middleware(['web', 'auth:web'])->group(function (): void {
             Route::get('/me', [AuthController::class, 'me'])->name('api.auth.me');
             Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
         });
     });
 
-    Route::prefix('me')->middleware('auth:sanctum')->group(function (): void {
+    Route::prefix('me')->middleware(['web', 'auth'])->group(function (): void {
         Route::put('/profile', [UserProfileController::class, 'update'])->name('api.me.profile.update');
         Route::get('/library', [UserAnimeLibraryController::class, 'index'])->name('api.me.library.index');
         Route::get('/anime/{anime}', [UserAnimeLibraryController::class, 'show'])
@@ -56,15 +56,17 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::get('/users/{user}/library', [UserAnimeLibraryController::class, 'publicIndex'])
+        ->middleware('web')
         ->where('user', '[a-zA-Z0-9_-]+')
         ->name('api.users.library.index');
     Route::get('/users/{user}/favorites', [UserAnimeFavoriteController::class, 'publicIndex'])
+        ->middleware('web')
         ->where('user', '[a-zA-Z0-9_-]+')
         ->name('api.users.favorites.index');
     Route::get('/users/{user}', [UserProfileController::class, 'show'])
         ->where('user', '[a-zA-Z0-9_-]+')
         ->name('api.users.show');
-    Route::prefix('editor')->middleware(['auth:sanctum', 'manage-news'])->group(function (): void {
+    Route::prefix('editor')->middleware(['web', 'auth', 'manage-news'])->group(function (): void {
         Route::get('/session', EditorSessionController::class)->name('api.editor.session');
     });
     Route::get('/home', HomePageController::class)->name('api.home');

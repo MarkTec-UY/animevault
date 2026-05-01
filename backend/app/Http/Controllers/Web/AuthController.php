@@ -58,6 +58,33 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateProfile(Request $request, UserProfileService $profiles): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $validated = $request->validate([
+            'about_me' => 'nullable|string|max:1000',
+            'timezone' => 'nullable|string',
+            'is_profile_public' => 'nullable|boolean',
+            'preferred_title_language' => 'nullable|string|in:romaji,english,native',
+            'preferred_scoring_system' => 'nullable|string|in:point_100,point_10_decimal,point_10,star_5',
+            'avatar' => 'nullable|image|mimes:jpeg,png,gif,webp|max:2048',
+            'banner' => 'nullable|image|mimes:jpeg,png,gif,webp|max:4096',
+            'remove_avatar' => 'nullable|boolean',
+            'remove_banner' => 'nullable|boolean',
+        ]);
+
+        $user = $profiles->update($user, $validated);
+
+        return response()->json([
+            'user' => $profiles->authenticatedPayload($user),
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         auth()->guard('web')->logout();

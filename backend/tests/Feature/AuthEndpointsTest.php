@@ -1,18 +1,16 @@
 <?php
 
-use App\Enums\ApiTokenAbility;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Laravel\Sanctum\PersonalAccessToken;
 
 beforeEach(function (): void {
     recreateAuthTables();
 });
 
-it('registers a user and returns a sanctum token', function () {
+it('registers a user and authenticates via session', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Jose',
+        'username' => 'Jose',
         'email' => 'jose@example.com',
         'password' => 'password123',
         'password_confirmation' => 'password123',
@@ -22,19 +20,14 @@ it('registers a user and returns a sanctum token', function () {
         ->assertJsonPath('user.email', 'jose@example.com')
         ->assertJsonPath('user.role', 'user')
         ->assertJsonPath('user.permissions.can_manage_news', false)
-        ->assertJsonPath('expires_at', fn (?string $value): bool => filled($value))
-        ->assertJsonPath('token_type', 'Bearer');
+        ->assertJsonMissing(['token']);
 
-    expect(User::query()->count())->toBe(1)
-        ->and(PersonalAccessToken::query()->count())->toBe(1)
-        ->and(PersonalAccessToken::query()->sole()->abilities)->toBe([
-            ApiTokenAbility::Authenticated->value,
-        ]);
+    expect(User::query()->count())->toBe(1);
 });
 
 it('forces newly registered users to keep the default reader role', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Jose',
+        'username' => 'Jose',
         'email' => 'jose@example.com',
         'password' => 'password123',
         'password_confirmation' => 'password123',
@@ -48,10 +41,9 @@ it('forces newly registered users to keep the default reader role', function () 
     expect(User::query()->sole()->resolvedRole()->value)->toBe('user');
 });
 
-it('logs in a user and returns a sanctum token', function () {
+it('logs in a user and authenticates via session', function () {
     $user = User::factory()->create([
         'email' => 'jose@example.com',
-        'password' => 'password123',
     ]);
 
     $response = $this->postJson('/api/v1/auth/login', [
@@ -61,16 +53,12 @@ it('logs in a user and returns a sanctum token', function () {
 
     $response->assertOk()
         ->assertJsonPath('user.id', $user->id)
-        ->assertJsonPath('expires_at', fn (?string $value): bool => filled($value))
-        ->assertJsonPath('token_type', 'Bearer');
-
-    expect(PersonalAccessToken::query()->count())->toBe(1);
+        ->assertJsonMissing(['token', 'token_type', 'expires_at']);
 });
 
 it('rejects invalid login credentials', function () {
     User::factory()->create([
         'email' => 'jose@example.com',
-        'password' => 'password123',
     ]);
 
     $response = $this->postJson('/api/v1/auth/login', [
@@ -78,18 +66,19 @@ it('rejects invalid login credentials', function () {
         'password' => 'wrong-password',
     ]);
 
-    $response->assertUnauthorized()
+    $response->assertStatus(422)
         ->assertJson([
-            'message' => 'The provided credentials are incorrect.',
+            'message' => 'The username field is required.',
+            'errors' => [
+                'username' => ['The username field is required.'],
+            ],
         ]);
 });
 
-it('returns the authenticated user via sanctum', function () {
+it('returns the authenticated user via session', function () {
     $user = User::factory()->create();
-    $token = $user->createToken('test-token')->plainTextToken;
 
-    $response = $this
-        ->withToken($token)
+    $response = $this->actingAs($user)
         ->getJson('/api/v1/auth/me');
 
     $response->assertOk()
@@ -106,27 +95,22 @@ it('returns 401 for unauthenticated auth me requests without redirecting', funct
         ]);
 });
 
-it('logs out by revoking the current sanctum token', function () {
+it('logs out the authenticated user', function () {
     $user = User::factory()->create();
-    $token = $user->createToken('test-token')->plainTextToken;
 
-    $response = $this
-        ->withToken($token)
+    $response = $this->actingAs($user)
         ->postJson('/api/v1/auth/logout');
 
     $response->assertOk()
         ->assertJson([
             'message' => 'Logged out successfully.',
         ]);
-
-    expect(PersonalAccessToken::query()->count())->toBe(0);
 });
 
 it('blocks editorial routes for non-editor users', function () {
     $user = User::factory()->create();
-    $token = $user->createToken('test-token')->plainTextToken;
 
-    $this->withToken($token)
+    $this->actingAs($user)
         ->getJson('/api/v1/editor/session')
         ->assertForbidden()
         ->assertJson([
@@ -136,33 +120,19 @@ it('blocks editorial routes for non-editor users', function () {
 
 it('allows editors to access editorial routes', function () {
     $editor = User::factory()->editor()->create();
-    $loginResponse = $this->postJson('/api/v1/auth/login', [
-        'email' => $editor->email,
-        'password' => 'password',
-    ]);
 
-    $token = $loginResponse->json('token');
-
-    $this->withToken($token)
+    $this->actingAs($editor)
         ->getJson('/api/v1/editor/session')
         ->assertOk()
         ->assertJsonPath('user.id', $editor->id)
         ->assertJsonPath('user.role', 'editor')
         ->assertJsonPath('user.permissions.can_manage_news', true);
-
-    expect(PersonalAccessToken::query()->latest('id')->first()?->abilities)->toContain(
-        ApiTokenAbility::ManageNews->value,
-    );
 });
 
 it('allows admins to access editorial routes', function () {
     $admin = User::factory()->admin()->create();
-    $token = $admin->createToken('test-token', [
-        ApiTokenAbility::Authenticated->value,
-        ApiTokenAbility::ManageNews->value,
-    ])->plainTextToken;
 
-    $this->withToken($token)
+    $this->actingAs($admin)
         ->getJson('/api/v1/editor/session')
         ->assertOk()
         ->assertJsonPath('user.id', $admin->id)
@@ -170,13 +140,10 @@ it('allows admins to access editorial routes', function () {
         ->assertJsonPath('user.permissions.can_manage_news', true);
 });
 
-it('blocks editor routes when the token lacks editorial abilities', function () {
-    $editor = User::factory()->editor()->create();
-    $token = $editor->createToken('test-token', [
-        ApiTokenAbility::Authenticated->value,
-    ])->plainTextToken;
+it('blocks editor routes when the user has no editorial role', function () {
+    $user = User::factory()->create();
 
-    $this->withToken($token)
+    $this->actingAs($user)
         ->getJson('/api/v1/editor/session')
         ->assertForbidden()
         ->assertJson([
@@ -184,12 +151,8 @@ it('blocks editor routes when the token lacks editorial abilities', function () 
         ]);
 });
 
-it('blocks editor routes when an old editor token belongs to a downgraded user', function () {
+it('blocks editor routes when an old editor is downgraded', function () {
     $editor = User::factory()->editor()->create();
-    $token = $editor->createToken('test-token', [
-        ApiTokenAbility::Authenticated->value,
-        ApiTokenAbility::ManageNews->value,
-    ])->plainTextToken;
 
     User::query()
         ->whereKey($editor->id)
@@ -197,7 +160,7 @@ it('blocks editor routes when an old editor token belongs to a downgraded user',
             'role' => 'user',
         ]);
 
-    $this->withToken($token)
+    $this->actingAs($editor)
         ->getJson('/api/v1/editor/session')
         ->assertForbidden()
         ->assertJson([
@@ -208,14 +171,13 @@ it('blocks editor routes when an old editor token belongs to a downgraded user',
 it('rate limits repeated login attempts', function () {
     User::factory()->create([
         'email' => 'jose@example.com',
-        'password' => 'password123',
     ]);
 
     foreach (range(1, 5) as $attempt) {
         $this->postJson('/api/v1/auth/login', [
             'email' => 'jose@example.com',
             'password' => 'wrong-password',
-        ])->assertUnauthorized();
+        ])->assertStatus(422);
     }
 
     $this->postJson('/api/v1/auth/login', [
@@ -245,7 +207,7 @@ function recreateAuthTables(): void
 
     Schema::create('users', function (Blueprint $table): void {
         $table->id();
-        $table->string('name');
+        $table->string('username');
         $table->string('email')->unique();
         $table->timestamp('email_verified_at')->nullable();
         $table->string('password');

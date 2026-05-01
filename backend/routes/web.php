@@ -17,4 +17,7 @@ Route::prefix('auth')->group(function (): void {
     Route::get('/me', [AuthController::class, 'me'])
         ->middleware('auth:web')
         ->name('auth.me');
+    Route::put('/profile', [AuthController::class, 'updateProfile'])
+        ->middleware('auth:web')
+        ->name('auth.profile.update');
 });

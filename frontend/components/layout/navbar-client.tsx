@@ -72,9 +72,13 @@ export function NavbarClient({ user }: NavbarClientProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20)
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20)
+    }
 
-    window.addEventListener("scroll", handleScroll)
+    setIsScrolled(window.scrollY > 20)
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
 
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
@@ -191,7 +195,7 @@ export function NavbarClient({ user }: NavbarClientProps) {
                         </div>
                         <div className="p-2">
                           <Link
-                            href={`/profile/${user.username}`}
+                            href={`/user/${user.username}`}
                             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                             onClick={() => setOpenDropdown(null)}
                           >
@@ -291,8 +295,8 @@ export function NavbarClient({ user }: NavbarClientProps) {
                   </div>
                   <div className="grid gap-2">
                     <Button asChild variant="outline" size="sm" className="justify-start">
-                      <Link href={`/profile/${user.username}`} onClick={() => setMobileOpen(false)}>
-                        Ver perfil
+                      <Link href={`/user/${user.username}`} onClick={() => setMobileOpen(false)}>
+                        View profile
                       </Link>
                     </Button>
                     <Button
@@ -301,11 +305,8 @@ export function NavbarClient({ user }: NavbarClientProps) {
                       size="sm"
                       className="justify-start"
                     >
-                      <Link
-                        href={`/profile/${user.username}?tab=library`}
-                        onClick={() => setMobileOpen(false)}
-                      >
-                        Mi biblioteca
+                      <Link href="/settings" onClick={() => setMobileOpen(false)}>
+                        Settings
                       </Link>
                     </Button>
                   </div>
