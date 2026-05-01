@@ -10,12 +10,12 @@ const AUTH_QUERY_KEY = ["auth", "user"]
 /**
  * Custom hook for authentication operations
  * Manages login, register, logout, and user state
+ * Uses session-based cookie authentication with CSRF protection
  */
 export function useAuth() {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  // Fetch current user
   const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: AUTH_QUERY_KEY,
     queryFn: async () => {
@@ -26,18 +26,18 @@ export function useAuth() {
       }
     },
     retry: false,
+    staleTime: 1000 * 60 * 5,
   })
 
-  // Login mutation
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginCredentials) => authAPI.login(credentials),
     onSuccess: (data) => {
       queryClient.setQueryData(AUTH_QUERY_KEY, data.user)
       router.push("/dashboard")
+      router.refresh()
     },
   })
 
-  // Register mutation
   const registerMutation = useMutation({
     mutationFn: (credentials: RegisterCredentials) => authAPI.register(credentials),
     onSuccess: (data) => {
@@ -46,12 +46,12 @@ export function useAuth() {
     },
   })
 
-  // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: () => authAPI.logout(),
     onSuccess: () => {
       queryClient.setQueryData(AUTH_QUERY_KEY, null)
       router.push("/")
+      router.refresh()
     },
   })
 

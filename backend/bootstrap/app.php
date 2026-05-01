@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Add CORS middleware first
         $middleware->append(HandleCors::class);
-        
+
         $middleware->append(AddSecurityHeaders::class);
         $middleware->alias([
             'manage-news' => EnsureUserCanManageNews::class,

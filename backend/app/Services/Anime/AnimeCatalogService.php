@@ -9,11 +9,11 @@ use App\Models\MediaSeason;
 use App\Models\MediaSource;
 use App\Models\MediaStatus;
 use App\Models\User;
+use Carbon\CarbonInterface;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\CarbonInterface;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Support\Facades\Cache;
 
 class AnimeCatalogService

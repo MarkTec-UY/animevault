@@ -62,6 +62,10 @@ if ! grep -Eq '^APP_KEY=base64:' .env 2>/dev/null; then
   php artisan key:generate --force
 fi
 
+if [ ! -L public/storage ]; then
+  php artisan storage:link
+fi
+
 php artisan optimize:clear || true
 php artisan migrate --force
 

@@ -6,6 +6,7 @@
 export interface LoginCredentials {
   email: string
   password: string
+  remember?: boolean
 }
 
 export interface RegisterCredentials extends LoginCredentials {
@@ -18,7 +19,11 @@ export interface User {
   username: string
   email: string
   avatar?: string
-  createdAt: string
+  avatar_url?: string | null
+  role: string
+  created_at?: string
+  createdAt?: string
+  is_profile_public?: boolean
 }
 
 export interface AuthResponse {

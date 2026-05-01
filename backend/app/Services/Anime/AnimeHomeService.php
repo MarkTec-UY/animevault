@@ -7,6 +7,7 @@ use App\Models\Genre;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -14,8 +15,7 @@ class AnimeHomeService
 {
     public function __construct(
         private readonly AnimeCatalogService $catalog,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -68,7 +68,7 @@ class AnimeHomeService
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Anime>
+     * @return Collection<int, Anime>
      */
     private function spotlightAnime(?int $excludeAnimeId = null)
     {
@@ -81,7 +81,7 @@ class AnimeHomeService
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Anime>
+     * @return Collection<int, Anime>
      */
     private function trendingAnime()
     {
@@ -94,7 +94,7 @@ class AnimeHomeService
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Anime>
+     * @return Collection<int, Anime>
      */
     private function seasonalAnime(?string $seasonCode, ?int $seasonYear)
     {
@@ -112,7 +112,7 @@ class AnimeHomeService
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Anime>
+     * @return Collection<int, Anime>
      */
     private function topRatedAnime()
     {

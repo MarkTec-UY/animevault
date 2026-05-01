@@ -7,9 +7,7 @@ use App\Http\Requests\UpdateUserProfileRequest;
 use App\Models\User;
 use App\Services\User\UserProfileService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 #[OA\Tag(
     name: 'User Profile',
