@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
 class AuthController extends Controller
 {
     private const int MAX_LOGIN_ATTEMPTS = 5;
+
     private const int LOGIN_DECAY_SECONDS = 60;
 
     #[OA\Post(

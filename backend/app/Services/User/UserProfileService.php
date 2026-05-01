@@ -25,12 +25,16 @@ class UserProfileService
 
         if (($payload['avatar'] ?? null) instanceof UploadedFile) {
             $this->deleteMedia($user->avatar_path);
-            $user->avatar_path = $payload['avatar']->store("user-profile/{$user->id}/avatars", 'public');
+            $folder = $this->sanitizeFolderName($user->username);
+            $filename = $this->generateUniqueFilename($payload['avatar']->getClientOriginalExtension());
+            $user->avatar_path = $payload['avatar']->storeAs("avatars/{$folder}", $filename, 'public');
         }
 
         if (($payload['banner'] ?? null) instanceof UploadedFile) {
             $this->deleteMedia($user->banner_path);
-            $user->banner_path = $payload['banner']->store("user-profile/{$user->id}/banners", 'public');
+            $folder = $this->sanitizeFolderName($user->username);
+            $filename = $this->generateUniqueFilename($payload['banner']->getClientOriginalExtension());
+            $user->banner_path = $payload['banner']->storeAs("banners/{$folder}", $filename, 'public');
         }
 
         $user->fill([
@@ -56,6 +60,7 @@ class UserProfileService
         return array_merge($this->basePayload($user), [
             'email' => $user->email,
             'role' => $user->resolvedRole()->value,
+            'created_at' => $user->created_at?->toAtomString(),
             'permissions' => [
                 'can_manage_news' => $user->canManageNews(),
                 'can_access_editor_panel' => $user->canManageNews(),
@@ -94,5 +99,15 @@ class UserProfileService
         if (filled($path)) {
             Storage::disk('public')->delete($path);
         }
+    }
+
+    private function sanitizeFolderName(string $name): string
+    {
+        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
+    }
+
+    private function generateUniqueFilename(string $extension): string
+    {
+        return uniqid('avatar_').'.'.ltrim($extension, '.');
     }
 }

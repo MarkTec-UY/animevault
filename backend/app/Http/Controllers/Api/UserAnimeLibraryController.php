@@ -8,12 +8,10 @@ use App\Http\Requests\UpsertUserAnimeLibraryRequest;
 use App\Models\Anime;
 use App\Models\User;
 use App\Services\User\UserAnimeLibraryService;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use OpenApi\Attributes as OA;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 #[OA\Tag(
     name: 'User Library',
@@ -21,8 +19,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 )]
 
 class UserAnimeLibraryController extends Controller
-{   
-
+{
     public function __construct()
     {
         $this->middleware('auth:sanctum')->except(['publicIndex']);

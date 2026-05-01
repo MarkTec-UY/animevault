@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/layout/navbar"
 import { HeroSection } from "@/components/shared/hero-section"
 import { TrendingSection } from "@/components/shared/trending-section"
 import { SeasonalSection } from "@/components/shared/seasonal-section"
@@ -19,7 +18,6 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
       <HeroSection
         featured={homePageData.hero.featured}
         spotlight={homePageData.hero.spotlight}

@@ -120,6 +120,7 @@ class AnimeAiringNotificationService
             ->map(fn (mixed $userId): int => (int) $userId)
             ->all();
     }
+
     private function normalizeDateTime(mixed $value): ?CarbonImmutable
     {
         if ($value === null || $value === '') {

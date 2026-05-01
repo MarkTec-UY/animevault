@@ -9,18 +9,24 @@ return [
     | Here you may configure CORS settings for your application. The settings
     | will be applied automatically to your API routes.
     |
+    | For Sanctum cookie-based auth, you MUST include the frontend origin in
+    | allowed_origins and set supports_credentials to true.
+    |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        ...collect(explode(',', env('FRONTEND_URL', 'http://localhost:3000')))
+            ->map(fn ($url) => trim($url))
+            ->filter()
+            ->toArray(),
         'http://localhost:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:3001',
-        'http://localhost',
     ],
 
     'allowed_origins_patterns' => [

@@ -9,16 +9,28 @@ import {
   ChevronDown,
   Flame,
   Layers,
+  LogOut,
   Menu,
+  Settings,
   Star,
   TrendingUp,
+  User as UserIcon,
   X,
 } from "lucide-react"
 
 import { SearchAnime } from "@/components/shared/search-anime"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
 import type { User } from "@/lib/types/auth"
+
+const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2363A375' width='100' height='100'/%3E%3Ccircle cx='50' cy='35' r='25' fill='%23fff'/%3E%3Cpath d='M20 90c0-16.5 13.5-30 30-30s30 13.5 30 30' fill='%23fff'/%3E%3C/svg%3E"
+
+function getAvatarUrl(user: User): string {
+  if (user.avatar_url) return user.avatar_url
+  if (user.avatar) return user.avatar
+  return DEFAULT_AVATAR
+}
 
 
 const navLinks = [
@@ -54,6 +66,7 @@ interface NavbarClientProps {
 }
 
 export function NavbarClient({ user }: NavbarClientProps) {
+  const { logout } = useAuth()
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
@@ -152,7 +165,59 @@ export function NavbarClient({ user }: NavbarClientProps) {
                     aria-hidden="true"
                   />
                 </button>
-        
+
+                <div className="relative">
+                  <button
+                    onClick={() => setOpenDropdown(openDropdown === 'user' ? null : 'user')}
+                    className="flex items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-secondary"
+                  >
+                    <img
+                      src={getAvatarUrl(user)}
+                      alt={user.username}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                    <span className="hidden md:inline text-sm font-medium text-foreground">
+                      {user.username}
+                    </span>
+                    <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", openDropdown === 'user' && "rotate-180")} />
+                  </button>
+
+                  {openDropdown === 'user' && (
+                    <div className="absolute right-0 top-full mt-1 w-48">
+                      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+                        <div className="border-b border-border px-4 py-3">
+                          <p className="font-medium text-foreground">{user.username}</p>
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                        <div className="p-2">
+                          <Link
+                            href={`/profile/${user.username}`}
+                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                            onClick={() => setOpenDropdown(null)}
+                          >
+                            <UserIcon className="h-4 w-4" />
+                            Profile
+                          </Link>
+                          <Link
+                            href="/settings"
+                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                            onClick={() => setOpenDropdown(null)}
+                          >
+                            <Settings className="h-4 w-4" />
+                            Settings
+                          </Link>
+                          <button
+                            onClick={() => logout()}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>

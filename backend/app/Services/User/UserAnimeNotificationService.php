@@ -103,7 +103,7 @@ class UserAnimeNotificationService
             ->first();
 
         if ($notification === null) {
-            throw (new ModelNotFoundException())->setModel(UserAnimeNotification::class, [$notificationId]);
+            throw (new ModelNotFoundException)->setModel(UserAnimeNotification::class, [$notificationId]);
         }
 
         return $notification;

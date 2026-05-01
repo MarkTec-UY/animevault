@@ -5,8 +5,8 @@ namespace App\Services\AniList;
 use App\Models\Anime;
 use App\Services\Anime\AnimeAiringNotificationService;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Console\OutputStyle;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +17,7 @@ use RuntimeException;
 class AniListAnimeImporter
 {
     private const CHECKPOINT_KEY = 'anilist_import:anime_checkpoint';
+
     private const UNKNOWN_LOOKUP_CODE = 'UNKNOWN';
 
     public function __construct(public AnimeAiringNotificationService $airingNotifications) {}
@@ -249,8 +250,7 @@ GRAPHQL;
         int $maxRateLimitRetries = 10,
         int $maxServerErrorRetries = 3,
         ?OutputStyle $output = null,
-    ): array
-    {
+    ): array {
         $rateLimitAttempt = 0;
         $serverErrorAttempt = 0;
         $connectionAttempt = 0;
@@ -299,6 +299,7 @@ GRAPHQL;
                 }
 
                 Sleep::for($retryAfter)->seconds();
+
                 continue;
             }
 
