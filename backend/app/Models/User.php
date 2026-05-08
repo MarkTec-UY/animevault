@@ -9,6 +9,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -219,6 +220,29 @@ class User extends Authenticatable
         return in_array($this->preferred_scoring_system, self::ALLOWED_PREFERRED_SCORING_SYSTEMS, true)
             ? $this->preferred_scoring_system
             : self::DEFAULT_PREFERRED_SCORING_SYSTEM;
+    }
+
+    public static function findByPublicIdentifier(string|int $value): ?self
+    {
+        $query = self::query()->where('username', (string) $value);
+
+        if (is_numeric($value)) {
+            $query->orWhere($query->getModel()->getQualifiedKeyName(), (int) $value);
+        }
+
+        return $query->first();
+    }
+
+    public static function findByPublicIdentifierOrFail(string|int $value): self
+    {
+        return self::findByPublicIdentifier($value)
+            ?? throw (new ModelNotFoundException)->setModel(self::class, [(string) $value]);
+    }
+
+    public function isVisibleTo(?self $viewer): bool
+    {
+        return $this->isProfilePubliclyVisible()
+            || ($viewer !== null && $viewer->id === $this->id);
     }
 
     /**

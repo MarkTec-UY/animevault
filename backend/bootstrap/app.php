@@ -30,7 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(
             fn (Request $request): ?string => $request->is('api/*')
                 ? null
-                : route('login')
+                : '/login'
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {

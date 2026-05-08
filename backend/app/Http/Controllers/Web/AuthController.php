@@ -4,41 +4,33 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
-use App\Models\User;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\UpdateUserProfileRequest;
+use App\Services\Auth\SessionAuthService;
 use App\Services\User\UserProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    private const int MAX_LOGIN_ATTEMPTS = 5;
+    public function register(
+        RegisterRequest $request,
+        SessionAuthService $auth,
+        UserProfileService $profiles,
+    ): JsonResponse {
+        $user = $auth->register($request, $request->validated());
 
-    private const int LOGIN_DECAY_SECONDS = 60;
+        return response()->json([
+            'user' => $profiles->authenticatedPayload($user),
+        ], 201);
+    }
 
-    public function login(LoginRequest $request, UserProfileService $profiles): JsonResponse
-    {
-        $this->ensureNotRateLimited($request);
-
-        $user = User::query()
-            ->where('email', $request->string('email'))
-            ->first();
-
-        if ($user === null || ! Hash::check($request->string('password'), $user->password)) {
-            RateLimiter::hit($this->throttleKey($request));
-
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
-        }
-
-        RateLimiter::clear($this->throttleKey($request));
-
-        auth()->login($user, $request->boolean('remember'));
-
-        $request->session()->regenerate();
+    public function login(
+        LoginRequest $request,
+        SessionAuthService $auth,
+        UserProfileService $profiles,
+    ): JsonResponse {
+        $user = $auth->authenticate($request);
 
         return response()->json([
             'user' => $profiles->authenticatedPayload($user),
@@ -58,63 +50,29 @@ class AuthController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request, UserProfileService $profiles): JsonResponse
-    {
+    public function updateProfile(
+        UpdateUserProfileRequest $request,
+        UserProfileService $profiles,
+    ): JsonResponse {
         $user = $request->user();
 
         if ($user === null) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        $validated = $request->validate([
-            'about_me' => 'nullable|string|max:1000',
-            'timezone' => 'nullable|string',
-            'is_profile_public' => 'nullable|boolean',
-            'preferred_title_language' => 'nullable|string|in:romaji,english,native',
-            'preferred_scoring_system' => 'nullable|string|in:point_100,point_10_decimal,point_10,star_5',
-            'avatar' => 'nullable|image|mimes:jpeg,png,gif,webp|max:2048',
-            'banner' => 'nullable|image|mimes:jpeg,png,gif,webp|max:4096',
-            'remove_avatar' => 'nullable|boolean',
-            'remove_banner' => 'nullable|boolean',
-        ]);
-
-        $user = $profiles->update($user, $validated);
+        $user = $profiles->update($user, $request->validated());
 
         return response()->json([
             'user' => $profiles->authenticatedPayload($user),
         ]);
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request, SessionAuthService $auth): JsonResponse
     {
-        auth()->guard('web')->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $auth->logout($request);
 
         return response()->json([
             'message' => 'Logged out successfully.',
         ]);
-    }
-
-    private function ensureNotRateLimited(Request $request): void
-    {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey($request), self::MAX_LOGIN_ATTEMPTS)) {
-            return;
-        }
-
-        $seconds = RateLimiter::availableIn($this->throttleKey($request));
-
-        throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
-        ]);
-    }
-
-    private function throttleKey(Request $request): string
-    {
-        return strtolower($request->input('email')).'|'.$request->ip();
     }
 }

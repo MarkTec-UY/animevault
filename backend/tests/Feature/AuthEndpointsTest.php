@@ -68,9 +68,9 @@ it('rejects invalid login credentials', function () {
 
     $response->assertStatus(422)
         ->assertJson([
-            'message' => 'The username field is required.',
+            'message' => 'These credentials do not match our records.',
             'errors' => [
-                'username' => ['The username field is required.'],
+                'email' => ['These credentials do not match our records.'],
             ],
         ]);
 });

@@ -95,13 +95,11 @@ class UserAnimeLibraryController extends Controller
         string $user,
         UserAnimeLibraryService $library,
     ): JsonResponse {
-        $userModel = User::where('username', $user)->firstOrFail();
+        $userModel = User::findByPublicIdentifierOrFail($user);
+        $viewer = $request->user();
 
-        $viewerId = $request->header('X-Viewer-Id');
-        $isOwner = $viewerId && (int) $viewerId === $userModel->id;
-
-        if (! $userModel->isProfilePubliclyVisible() && ! $isOwner) {
-            abort(403, 'This profile is private.');
+        if (! $userModel->isVisibleTo($viewer)) {
+            abort(404, 'User profile not found.');
         }
 
         return response()->json($library->paginateLibrary($userModel, $request->validated()));

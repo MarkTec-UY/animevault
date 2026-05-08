@@ -8,6 +8,9 @@ Route::get('/', function () {
 });
 
 Route::prefix('auth')->group(function (): void {
+    Route::post('/register', [AuthController::class, 'register'])
+        ->middleware('throttle:auth-register')
+        ->name('auth.register');
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:auth-login')
         ->name('auth.login');

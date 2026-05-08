@@ -25,16 +25,20 @@ class UserProfileService
 
         if (($payload['avatar'] ?? null) instanceof UploadedFile) {
             $this->deleteMedia($user->avatar_path);
-            $folder = $this->sanitizeFolderName($user->username);
-            $filename = $this->generateUniqueFilename($payload['avatar']->getClientOriginalExtension());
-            $user->avatar_path = $payload['avatar']->storeAs("avatars/{$folder}", $filename, 'public');
+            $user->avatar_path = $payload['avatar']->storeAs(
+                $this->avatarDirectory($user),
+                $payload['avatar']->hashName(),
+                'public',
+            );
         }
 
         if (($payload['banner'] ?? null) instanceof UploadedFile) {
             $this->deleteMedia($user->banner_path);
-            $folder = $this->sanitizeFolderName($user->username);
-            $filename = $this->generateUniqueFilename($payload['banner']->getClientOriginalExtension());
-            $user->banner_path = $payload['banner']->storeAs("banners/{$folder}", $filename, 'public');
+            $user->banner_path = $payload['banner']->storeAs(
+                $this->bannerDirectory($user),
+                $payload['banner']->hashName(),
+                'public',
+            );
         }
 
         $user->fill([
@@ -101,13 +105,13 @@ class UserProfileService
         }
     }
 
-    private function sanitizeFolderName(string $name): string
+    private function avatarDirectory(User $user): string
     {
-        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
+        return sprintf('user-profile/%d/avatars', $user->id);
     }
 
-    private function generateUniqueFilename(string $extension): string
+    private function bannerDirectory(User $user): string
     {
-        return uniqid('avatar_').'.'.ltrim($extension, '.');
+        return sprintf('user-profile/%d/banners', $user->id);
     }
 }

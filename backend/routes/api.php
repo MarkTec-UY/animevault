@@ -14,20 +14,20 @@ use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
-    Route::prefix('auth')->group(function (): void {
+    Route::prefix('auth')->middleware('web')->group(function (): void {
         Route::post('/register', [AuthController::class, 'register'])
             ->middleware('throttle:auth-register')
             ->name('api.auth.register');
         Route::post('/login', [AuthController::class, 'login'])
             ->middleware('throttle:auth-login')
             ->name('api.auth.login');
-        Route::middleware(['web', 'auth:web'])->group(function (): void {
+        Route::middleware('auth:web,sanctum')->group(function (): void {
             Route::get('/me', [AuthController::class, 'me'])->name('api.auth.me');
             Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
         });
     });
 
-    Route::prefix('me')->middleware(['web', 'auth'])->group(function (): void {
+    Route::prefix('me')->middleware(['web', 'auth:web,sanctum'])->group(function (): void {
         Route::put('/profile', [UserProfileController::class, 'update'])->name('api.me.profile.update');
         Route::get('/library', [UserAnimeLibraryController::class, 'index'])->name('api.me.library.index');
         Route::get('/anime/{anime}', [UserAnimeLibraryController::class, 'show'])
@@ -64,9 +64,10 @@ Route::prefix('v1')->group(function (): void {
         ->where('user', '[a-zA-Z0-9_-]+')
         ->name('api.users.favorites.index');
     Route::get('/users/{user}', [UserProfileController::class, 'show'])
+        ->middleware('web')
         ->where('user', '[a-zA-Z0-9_-]+')
         ->name('api.users.show');
-    Route::prefix('editor')->middleware(['web', 'auth', 'manage-news'])->group(function (): void {
+    Route::prefix('editor')->middleware(['web', 'auth:web,sanctum', 'manage-news'])->group(function (): void {
         Route::get('/session', EditorSessionController::class)->name('api.editor.session');
     });
     Route::get('/home', HomePageController::class)->name('api.home');

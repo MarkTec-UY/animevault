@@ -18,7 +18,7 @@ it('creates the user anime tracking and favorites tables', function () {
 it('stores a user anime library entry with status, score and progress', function () {
     DB::table('users')->insert([
         'id' => 1,
-        'name' => 'Jose',
+        'username' => 'Jose',
         'email' => 'jose@example.com',
         'password' => 'secret',
         'created_at' => now(),
@@ -50,7 +50,7 @@ it('stores a user anime library entry with status, score and progress', function
 it('prevents duplicate library or favorite records for the same user and anime', function () {
     DB::table('users')->insert([
         'id' => 1,
-        'name' => 'Jose',
+        'username' => 'Jose',
         'email' => 'jose@example.com',
         'password' => 'secret',
         'created_at' => now(),
@@ -108,7 +108,7 @@ function recreateUserAnimeTablePrerequisites(): void
 
     Schema::create('users', function (Blueprint $table): void {
         $table->id();
-        $table->string('name');
+        $table->string('username');
         $table->string('email')->unique();
         $table->string('password');
         $table->string('role')->default('user');

@@ -11,7 +11,7 @@ class EnsureUserCanManageNews
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = $request->user()?->fresh();
 
         if ($user === null) {
             return new JsonResponse([
