@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { BookmarkCheck, Heart, Loader2, Play, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { useUser } from "@/lib/hooks/use-user"
 import {
@@ -87,9 +88,29 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
   if (loading || authLoading) {
     return (
       <div className="flex flex-wrap gap-3 pt-1">
-        <Button size="lg" disabled className="bg-primary/50">
-          <Loader2 className="w-4 h-4 animate-spin" />
-        </Button>
+        {/* Watch Now Button Skeleton */}
+        <div className="flex items-center gap-2 px-6 py-3 rounded-xl bg-muted animate-pulse">
+          <Skeleton className="w-4 h-4 rounded" />
+          <Skeleton className="w-12 h-4" />
+        </div>
+
+        {/* Add to List Button Skeleton */}
+        <div className="flex items-center gap-2 px-6 py-2 rounded-xl border border-border bg-muted/50 animate-pulse">
+          <Skeleton className="w-4 h-4 rounded" />
+          <Skeleton className="w-10 h-4" />
+        </div>
+
+        {/* Favorite Button Skeleton */}
+        <div className="flex items-center gap-2 px-6 py-2 rounded-xl bg-muted animate-pulse">
+          <Skeleton className="w-4 h-4 rounded" />
+          <Skeleton className="w-10 h-4" />
+        </div>
+
+        {/* Share Button Skeleton */}
+        <div className="flex items-center gap-2 px-6 py-2 rounded-xl bg-muted animate-pulse">
+          <Skeleton className="w-4 h-4 rounded" />
+          <Skeleton className="w-10 h-4" />
+        </div>
       </div>
     )
   }

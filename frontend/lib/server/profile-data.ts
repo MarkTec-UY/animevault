@@ -117,10 +117,10 @@ function normalizeLibraryItem(raw: unknown): LibraryItem | null {
   }
 }
 
-function normalizeFavorite(raw: unknown): FavoriteItem | null {
+function normalizeFavorite(raw: unknown, ownerId?: number): FavoriteItem | null {
   const item = (raw ?? {}) as Record<string, unknown>
   const anime = (item.anime ?? {}) as Record<string, unknown>
-  const userId = toNumber(item.user_id)
+  const userId = toNumber(item.user_id ?? ownerId)
   const animeId = toNumber(item.anime_id ?? anime.id)
   if (!userId || !animeId) return null
   return {
@@ -256,7 +256,7 @@ export async function getProfilePayload(
       ? favoritesRaw
       : (favoritesRaw as { data?: unknown[] })?.data ?? []
   )
-  .map(normalizeFavorite)
+    .map((item) => normalizeFavorite(item, user.id))
     .filter((x): x is FavoriteItem => x !== null)
 
   const notifications = (

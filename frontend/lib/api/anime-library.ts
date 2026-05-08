@@ -145,11 +145,20 @@ export async function removeAnimeFromLibrary(animeId: number): Promise<void> {
 
 export async function getUserAnimeFavoriteStatus(animeId: number): Promise<boolean> {
   try {
-    const response = await fetchWithCsrf<{ data?: { anime_id: number }[] }>("/api/v1/me/favorites", {
+    const response = await fetchWithCsrf<{ data?: unknown[] }>("/api/v1/me/favorites", {
       method: "GET",
     })
     const data = response.data ?? []
-    return data.some((fav) => fav.anime_id === animeId)
+    return data.some((fav) => {
+      const item = fav as Record<string, unknown>
+      const animeIdValue =
+        typeof item.anime_id === "number"
+          ? item.anime_id
+          : typeof item.anime === "object" && item.anime !== null
+          ? (item.anime as Record<string, unknown>).id
+          : undefined
+      return animeIdValue === animeId
+    })
   } catch {
     return false
   }
