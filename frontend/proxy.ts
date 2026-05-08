@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 
 const PUBLIC_ONLY_ROUTES = ['/login', '/register']
 
-export async function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isPublicOnlyRoute = PUBLIC_ONLY_ROUTES.some((route) => pathname === route)

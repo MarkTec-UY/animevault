@@ -15,7 +15,7 @@ async function fetchWithCsrf<T>(endpoint: string, options: RequestOptions = {}):
 export type UserAnimeStatus =
   | "watching"
   | "completed"
-  | "on_hold"
+  | "paused"
   | "dropped"
   | "planning"
 
@@ -143,9 +143,21 @@ export async function removeAnimeFromLibrary(animeId: number): Promise<void> {
   })
 }
 
+export async function getUserAnimeFavoriteStatus(animeId: number): Promise<boolean> {
+  try {
+    const response = await fetchWithCsrf<{ data?: { anime_id: number }[] }>("/api/v1/me/favorites", {
+      method: "GET",
+    })
+    const data = response.data ?? []
+    return data.some((fav) => fav.anime_id === animeId)
+  } catch {
+    return false
+  }
+}
+
 export async function addToFavorites(animeId: number): Promise<void> {
   await fetchWithCsrf(`/api/v1/me/favorites/${animeId}`, {
-    method: "POST",
+    method: "PUT",
   })
 }
 

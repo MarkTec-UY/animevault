@@ -94,36 +94,41 @@ function normalizeUser(raw: unknown): ProfileUser | null {
 
 function normalizeLibraryItem(raw: unknown): LibraryItem | null {
   const item = (raw ?? {}) as Record<string, unknown>
-  
   const entry = item.library_entry as Record<string, unknown> | undefined
   const animeData = item.anime as Record<string, unknown> | undefined
-  
-  if (!entry && !animeData) return null
-  
+
+  if (!entry || !animeData) return null
+
   const animeId = animeData?.id ? toNumber(animeData.id) : 0
-  
+
   return {
     id: entry?.id ? toNumber(entry.id) : 0,
     user_id: 0,
     anime_id: animeId,
     status: (entry?.status as LibraryStatus) ?? "planning",
-    progress_episodes: entry?.progress_episodes != null ? toNumber(entry.progress_episodes) : 0,
+    progress_episodes:
+      entry?.progress_episodes != null
+        ? toNumber(entry.progress_episodes)
+        : 0,
     score: entry?.score == null ? null : toNumber(entry?.score),
     started_at: safe(entry?.started_at, null),
     completed_at: safe(entry?.completed_at, null),
-    anime: animeData ? normalizeAnime(animeData) : null,
+    anime: normalizeAnime(animeData),
   }
 }
 
 function normalizeFavorite(raw: unknown): FavoriteItem | null {
   const item = (raw ?? {}) as Record<string, unknown>
-  if (item.id == null) return null
+  const anime = (item.anime ?? {}) as Record<string, unknown>
+  const userId = toNumber(item.user_id)
+  const animeId = toNumber(item.anime_id ?? anime.id)
+  if (!userId || !animeId) return null
   return {
-    id: toNumber(item.id),
-    user_id: toNumber(item.user_id),
-    anime_id: toNumber(item.anime_id),
+    id: userId * 10000 + animeId,
+    user_id: userId,
+    anime_id: animeId,
     created_at: String(item.created_at ?? ""),
-    anime: normalizeAnime(item.anime),
+    anime: normalizeAnime(anime),
   }
 }
 
@@ -251,7 +256,7 @@ export async function getProfilePayload(
       ? favoritesRaw
       : (favoritesRaw as { data?: unknown[] })?.data ?? []
   )
-    .map(normalizeFavorite)
+  .map(normalizeFavorite)
     .filter((x): x is FavoriteItem => x !== null)
 
   const notifications = (

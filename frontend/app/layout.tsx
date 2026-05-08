@@ -1,10 +1,12 @@
-import type { Metadata, Viewport } from 'next'
-import { Inter, DM_Serif_Display, Noto_Sans_JP, Geist } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import { Providers } from './providers'
-import { NavbarServer } from '@/components/layout/navbar-server'
-import './globals.css'
-import { cn } from "@/lib/utils";
+import type { Metadata, Viewport } from "next"
+import { DM_Serif_Display, Inter, Noto_Sans_JP } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+
+import { NavbarServer } from "@/components/layout/navbar-server"
+import { cn } from "@/lib/utils"
+
+import { Providers } from "./providers"
+import "./globals.css"
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,20 +30,29 @@ const notoSansJP = Noto_Sans_JP({
 })
 
 export const metadata: Metadata = {
-  title: 'AnimeVault — Discover, Track & Explore Anime & Manga',
-  description: 'AnimeVault is your ultimate platform to discover, track, and explore anime and manga. Browse trending shows, seasonal picks, top-rated titles, and more.',
-  keywords: ['anime', 'manga', 'watchlist', 'AniList', 'MyAnimeList', 'anime tracker', 'anime discovery'],
-  authors: [{ name: 'AnimeVault' }],
+  title: "AnimeVault — Discover, Track & Explore Anime & Manga",
+  description:
+    "AnimeVault is your ultimate platform to discover, track, and explore anime and manga. Browse trending shows, seasonal picks, top-rated titles, and more.",
+  keywords: [
+    "anime",
+    "manga",
+    "watchlist",
+    "AniList",
+    "MyAnimeList",
+    "anime tracker",
+    "anime discovery",
+  ],
+  authors: [{ name: "AnimeVault" }],
   openGraph: {
-    title: 'AnimeVault — Discover, Track & Explore Anime & Manga',
-    description: 'Your ultimate anime and manga discovery platform.',
-    type: 'website',
+    title: "AnimeVault — Discover, Track & Explore Anime & Manga",
+    description: "Your ultimate anime and manga discovery platform.",
+    type: "website",
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#111827',
-  width: 'device-width',
+  themeColor: "#111827",
+  width: "device-width",
   initialScale: 1,
 }
 
@@ -52,11 +63,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("dark", "font-sans", inter.variable)}>
-      <body className={`${inter.variable} ${dmSerifDisplay.variable} ${notoSansJP.variable} font-sans antialiased`}>
+      <body
+        className={`${inter.variable} ${dmSerifDisplay.variable} ${notoSansJP.variable} font-sans antialiased`}
+      >
         <Providers>
           <NavbarServer />
           {children}
-          {process.env.NODE_ENV === 'production' && <Analytics />}
+          {process.env.NODE_ENV === "production" && <Analytics />}
         </Providers>
       </body>
     </html>

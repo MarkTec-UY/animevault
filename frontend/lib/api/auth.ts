@@ -1,6 +1,6 @@
-import { API_CONFIG } from "@/lib/api-config"
-import { apiFetch, type RequestOptions } from "./client"
 import { getCsrfTokenFromDocument } from "@/lib/csrf"
+import { API_CONFIG } from "@/lib/api-config"
+import { apiFetch } from "./client"
 import type { LoginCredentials, RegisterCredentials, AuthResponse, User } from "@/lib/types/auth"
 
 /**
@@ -44,7 +44,7 @@ export const authAPI = {
    * Login with email and password (session-based)
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    return fetchWithCsrf<AuthResponse>('/auth/login', {
+    return fetchWithCsrf<AuthResponse>(API_CONFIG.endpoints.auth.login, {
       method: "POST",
       body: JSON.stringify(credentials),
     })
@@ -54,7 +54,7 @@ export const authAPI = {
    * Logout the current user (session-based)
    */
   async logout(): Promise<void> {
-    return fetchWithCsrf<void>('/auth/logout', {
+    return fetchWithCsrf<void>(API_CONFIG.endpoints.auth.logout, {
       method: "POST",
     })
   },
@@ -63,7 +63,7 @@ export const authAPI = {
    * Get current user data (session-based)
    */
   async getCurrentUser(): Promise<User> {
-    return fetchWithCsrf<{ user: User }>('/auth/me', {
+    return fetchWithCsrf<{ user: User }>(API_CONFIG.endpoints.auth.me, {
       method: "GET",
     }).then((response) => response.user)
   },

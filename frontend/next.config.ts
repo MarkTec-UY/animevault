@@ -24,9 +24,6 @@ const backendUrl = process.env.INTERNAL_API_URL || 'http://localhost:8000'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     unoptimized: true,
     remotePatterns: [

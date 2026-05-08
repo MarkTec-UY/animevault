@@ -10,6 +10,8 @@ import { ProfileStats } from "@/components/user/profile-stats"
 import { PrivateProfile } from "@/components/user/private-profile"
 import { getProfilePayload } from "@/lib/server/profile-data"
 
+export const dynamic = "force-dynamic"
+
 interface UserPageProps {
   params: Promise<{ username: string }>
 }
@@ -38,7 +40,7 @@ export default async function UserProfilePage({ params }: UserPageProps) {
   // Private profile and viewer is not the owner
   if (!user.is_profile_public && !is_own_profile) {
     return (
-      <main className="min-h-screen bg-background pb-16 pt-16">
+      <main className="min-h-screen bg-background pb-16">
         <ProfileBanner user={user} isOwnProfile={false} />
         <PrivateProfile user={user} />
       </main>
@@ -46,7 +48,7 @@ export default async function UserProfilePage({ params }: UserPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-background pb-16 pt-16">
+    <main className="min-h-screen bg-background pb-16">
       <ProfileBanner user={user} isOwnProfile={is_own_profile} />
 
       <div className="mx-auto mt-10 max-w-6xl space-y-10 px-4 sm:px-6 lg:px-8">

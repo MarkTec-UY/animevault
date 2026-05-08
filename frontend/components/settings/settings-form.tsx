@@ -469,7 +469,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
           </div>
           <Checkbox
             checked={isPublic}
-            onCheckedChange={setIsPublic}
+            onCheckedChange={(checked) => setIsPublic(checked === true)}
           />
         </div>
       </section>

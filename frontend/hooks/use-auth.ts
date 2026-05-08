@@ -33,7 +33,7 @@ export function useAuth() {
     mutationFn: (credentials: LoginCredentials) => authAPI.login(credentials),
     onSuccess: (data) => {
       queryClient.setQueryData(AUTH_QUERY_KEY, data.user)
-      router.push("/dashboard")
+      router.push(`/user/${data.user.username}`)
       router.refresh()
     },
   })
@@ -42,7 +42,7 @@ export function useAuth() {
     mutationFn: (credentials: RegisterCredentials) => authAPI.register(credentials),
     onSuccess: (data) => {
       queryClient.setQueryData(AUTH_QUERY_KEY, data.user)
-      router.push("/dashboard")
+      router.push(`/user/${data.user.username}`)
     },
   })
 

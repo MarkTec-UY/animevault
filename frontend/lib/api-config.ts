@@ -21,10 +21,10 @@ export const API_CONFIG = {
     },
     home: '/api/v1/home',
     auth: {
-      register: '/api/v1/auth/register',
-      login: '/api/v1/auth/login',
-      logout: '/api/v1/auth/logout',
-      me: '/api/v1/auth/me',
+      register: '/auth/register',
+      login: '/auth/login',
+      logout: '/auth/logout',
+      me: '/auth/me',
     },
     authSession: {
       login: '/auth/login',

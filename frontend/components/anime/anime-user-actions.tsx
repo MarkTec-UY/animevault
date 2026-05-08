@@ -12,10 +12,11 @@ import {
   getUserAnimeEntry,
   updateAnimeEntry,
   toggleFavorite,
+  getUserAnimeFavoriteStatus,
 } from "@/lib/api/anime-library"
 import type { AnimeData } from "@/lib/types/anime"
 import { LibraryEditModal } from "@/components/user/library-edit-modal"
-import type { LibraryItem } from "@/lib/types/profile"
+import type { LibraryItem, LibraryStatus } from "@/lib/types/profile"
 
 interface AnimeUserActionsProps {
   anime: AnimeData
@@ -24,7 +25,7 @@ interface AnimeUserActionsProps {
 const STATUS_OPTIONS: { value: UserAnimeStatus; label: string }[] = [
   { value: "planning", label: "Plan to Watch" },
   { value: "watching", label: "Watching" },
-  { value: "on_hold", label: "On Hold" },
+  { value: "paused", label: "On Hold" },
   { value: "dropped", label: "Dropped" },
   { value: "completed", label: "Completed" },
 ]
@@ -33,28 +34,49 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
   const router = useRouter()
   const { user, loading: authLoading } = useUser()
   const [entry, setEntry] = useState<UserAnimeEntry | null>(null)
+  const [isFavorite, setIsFavorite] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
+
+    // If not authenticated, mark as loaded and return
     if (!user) {
-      setLoading(false)
-      return
+      const timer = setTimeout(() => {
+        setLoading(false)
+      }, 0)
+      return () => clearTimeout(timer)
     }
-    getUserAnimeEntry(anime.id).then((data) => {
-      setEntry(data)
-      setLoading(false)
-    })
+
+    // Fetch both entry and favorite status in parallel
+    const fetchData = async () => {
+      try {
+        const [entryData, favStatus] = await Promise.all([
+          getUserAnimeEntry(anime.id),
+          getUserAnimeFavoriteStatus(anime.id),
+        ])
+        setEntry(entryData)
+        setIsFavorite(favStatus)
+      } catch (error) {
+        console.error("Failed to load anime entry:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [anime.id, user, authLoading])
 
   async function handleToggleFavorite() {
-    if (!user || !entry) return
+    if (!user) return
     setSaving(true)
     try {
-      await toggleFavorite(anime.id, entry.is_favorite)
-      setEntry({ ...entry, is_favorite: !entry.is_favorite })
+      const currentFavorite = isFavorite
+      await toggleFavorite(anime.id, currentFavorite)
+      // Update only isFavorite state
+      setIsFavorite(!currentFavorite)
     } catch (error) {
       console.error("Failed to toggle favorite:", error)
     } finally {
@@ -90,7 +112,6 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
   }
 
   const isInLibrary = entry !== null
-  const isFavorite = entry?.is_favorite ?? false
 
   const libraryItem = buildLibraryItem(entry, anime)
 
@@ -100,7 +121,7 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
         id: e.id,
         user_id: 0,
         anime_id: a.id,
-        status: e.status,
+        status: (e.status as LibraryStatus),
         progress_episodes: e.progress_episodes ?? 0,
         score: e.score,
         started_at: null,
@@ -170,7 +191,11 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
                   status: "planning",
                   progress_episodes: 0,
                 })
-                setEntry(newEntry)
+                // If already favorited, preserve that state
+                setEntry({
+                  ...newEntry,
+                  is_favorite: isFavorite,
+                })
               } catch (error) {
                 console.error("Failed to add to list:", error)
                 setSaving(false)

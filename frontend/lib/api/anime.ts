@@ -12,6 +12,8 @@ export interface AnimeApiResponse {
   }
   description?: string
   synopsis?: string
+  next_airing_at?: string | null
+  next_airing_episode?: number | null
   cover_image?: {
     color?: string
     large?: string
@@ -208,6 +210,8 @@ function transformApiResponseToAnimeData(apiData: AnimeApiResponse): AnimeData {
     rating: "PG-13", // TODO: Add to API response
     isAiring: status === "RELEASING" || status === "AIRING",
     genres: apiData.genres || [],
+    nextAiringAt: apiData.next_airing_at || null,
+    nextAiringEpisode: apiData.next_airing_episode || null,
     themes: (apiData.tags || []).map((tag) => tag.name || "").filter(Boolean),
     characters: [],
     episodes_list: [],

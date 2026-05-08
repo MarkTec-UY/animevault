@@ -70,6 +70,8 @@ export interface AnimeData {
   rating: string
   isAiring: boolean
   genres: string[]
+  nextAiringAt: string | null
+  nextAiringEpisode: number | null
   themes: string[]
   characters: Character[]
   episodes_list: Episode[]

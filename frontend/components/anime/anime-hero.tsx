@@ -2,12 +2,11 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import {
-  Play, Heart, Share2, Star,
-  Clock, Tv, Calendar, Globe
-} from "lucide-react"
+import { Calendar, Clock, Globe, Star, Tv } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { AnimeUserActions } from "@/components/anime/anime-user-actions"
+import { useAiringCountdown } from "@/hooks/use-airing-countdown"
 import type { AnimeData } from "@/lib/types/anime"
 
 interface AnimeHeroProps {
@@ -15,6 +14,7 @@ interface AnimeHeroProps {
 }
 
 export function AnimeHero({ anime }: AnimeHeroProps) {
+  const timeLeft = useAiringCountdown(anime.nextAiringAt)
 
   return (
     <section className="relative">
@@ -47,6 +47,11 @@ export function AnimeHero({ anime }: AnimeHeroProps) {
               <div className="absolute top-2 left-2 flex items-center gap-1 bg-primary text-primary-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-pulse" />
                 Airing
+              </div>
+            )}
+            {timeLeft && anime.nextAiringEpisode && (
+              <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur text-foreground text-xs font-medium px-2 py-1 rounded-full shadow-lg">
+                Ep {anime.nextAiringEpisode}: {timeLeft}
               </div>
             )}
           </div>

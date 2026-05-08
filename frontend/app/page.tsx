@@ -6,12 +6,9 @@ import { GenreSection } from "@/components/shared/genre-section"
 import { StatsBanner } from "@/components/shared/stats-banner"
 import { CtaSection } from "@/components/shared/cta-section"
 import { Footer } from "@/components/layout/footer"
-import {
-  getHomePageData,
-  HOME_PAGE_REVALIDATE_SECONDS,
-} from "@/features/home/get-home-page-data"
+import { getHomePageData } from "@/features/home/get-home-page-data"
 
-export const revalidate = HOME_PAGE_REVALIDATE_SECONDS
+export const revalidate = 300
 
 export default async function HomePage() {
   const homePageData = await getHomePageData()

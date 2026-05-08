@@ -1,4 +1,4 @@
-import { cookies, headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import { apiFetchServer } from './api'
 
 export interface ServerUser {
@@ -11,8 +11,6 @@ export interface ServerUser {
   created_at: string
   avatar_url?: string | null
 }
-
-const AUTH_USER_KEY = 'auth_user'
 
 export async function getServerUser(): Promise<ServerUser | null> {
   'use server'

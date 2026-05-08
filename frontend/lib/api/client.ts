@@ -4,6 +4,33 @@ export interface RequestOptions extends RequestInit {
   headers?: Record<string, string>
 }
 
+interface ApiErrorBody {
+  message?: string
+  errors?: Record<string, string[]>
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly errors?: Record<string, string[]>,
+  ) {
+    super(message)
+    this.name = "ApiError"
+  }
+}
+
+async function parseErrorBody(response: Response): Promise<ApiErrorBody | null> {
+  const contentType = response.headers.get("content-type")
+
+  if (!contentType?.includes("application/json")) {
+    return null
+  }
+
+  const data = (await response.json()) as ApiErrorBody
+  return data
+}
+
 /**
  * HTTP client for API requests
  * Automatically handles JSON, errors, and auth headers
@@ -30,12 +57,34 @@ export async function apiFetch<T = unknown>(
     })
 
     if (!response.ok) {
-      if (response.status === 404) {
-        const error = new Error("Not found")
-        ;(error as any).status = 404
-        throw error
+      const errorBody = await parseErrorBody(response)
+
+      if (response.status === 401) {
+        throw new ApiError(
+          errorBody?.message || "Credenciales inválidas",
+          response.status,
+        )
       }
-      throw new Error(`API error: ${response.status} ${response.statusText}`)
+
+      if (response.status === 422) {
+        const message =
+          errorBody?.message ||
+          (errorBody?.errors
+            ? Object.values(errorBody.errors).flat().join(", ")
+            : "Validation error")
+
+        throw new ApiError(message, response.status, errorBody?.errors)
+      }
+
+      if (response.status === 404) {
+        throw new ApiError("Not found", response.status)
+      }
+
+      throw new ApiError(
+        errorBody?.message || `API error: ${response.status} ${response.statusText}`,
+        response.status,
+        errorBody?.errors,
+      )
     }
 
     // Handle empty responses
@@ -65,7 +114,7 @@ export async function fetchJson<T = unknown>(
   try {
     return await apiFetch<T>(endpoint, options)
   } catch (error) {
-    if ((error as any)?.status === 404) {
+    if (error instanceof ApiError && error.status === 404) {
       return null
     }
     console.error("API request failed:", error)

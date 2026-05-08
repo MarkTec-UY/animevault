@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CalendarDays, Globe2, Settings, User as UserIcon } from "lucide-react"
+import { CalendarDays, Globe2, Settings } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import type { ProfileUser } from "@/lib/types/profile"
@@ -34,7 +34,7 @@ export function ProfileBanner({ user, isOwnProfile }: ProfileBannerProps) {
 
   const isDefaultAvatar = !avatar || avatar === DEFAULT_AVATAR
 
-return (
+  return (
     <section className="relative">
       {/* Identity row - on top of banner */}
       <div className="relative z-10 mx-auto max-w-6xl px-4 pt-48 sm:pt-56 lg:pt-72 sm:px-6 lg:px-8">
@@ -44,7 +44,9 @@ return (
             <div className="relative h-28 w-28 overflow-hidden rounded-2xl border-4 border-background shadow-2xl ring-2 ring-background sm:h-32 sm:w-32">
               {isDefaultAvatar ? (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-600">
-                  <UserIcon className="h-12 w-12 text-white/90" />
+                  <span className="text-3xl font-semibold text-white/90">
+                    {getInitials(user.name || user.username)}
+                  </span>
                 </div>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -95,7 +97,7 @@ return (
               {user.timezone && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/50 px-3 py-1 text-xs">
                   <Globe2 className="h-3.5 w-3.5 text-primary" />
-                  {user.timezone.split('/')[1]?.replace('_', ' ') || user.timezone}
+                  {user.timezone.split("/")[1]?.replace("_", " ") || user.timezone}
                 </span>
               )}
               {!user.is_profile_public && (

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useState, useSyncExternalStore } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import {
   Bell,
@@ -67,21 +68,20 @@ interface NavbarClientProps {
 
 export function NavbarClient({ user }: NavbarClientProps) {
   const { logout } = useAuth()
-  const [isScrolled, setIsScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [hoveredNavLabel, setHoveredNavLabel] = useState<string | null>(null)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-
-    setIsScrolled(window.scrollY > 20)
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-
-    return () => window.removeEventListener("scroll", handleScroll)
+  const subscribeToScroll = useCallback((onStoreChange: () => void) => {
+    window.addEventListener("scroll", onStoreChange, { passive: true })
+    return () => window.removeEventListener("scroll", onStoreChange)
   }, [])
+
+  const isScrolled = useSyncExternalStore(
+    subscribeToScroll,
+    () => window.scrollY > 20,
+    () => false,
+  )
 
   return (
     <header
@@ -111,19 +111,19 @@ export function NavbarClient({ user }: NavbarClientProps) {
                 <div
                   key={link.label}
                   className="relative"
-                  onMouseEnter={() => setOpenDropdown(link.label)}
-                  onMouseLeave={() => setOpenDropdown(null)}
+                  onMouseEnter={() => setHoveredNavLabel(link.label)}
+                  onMouseLeave={() => setHoveredNavLabel(null)}
                 >
                   <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                     {link.label}
                     <ChevronDown
                       className={cn(
                         "h-3.5 w-3.5 transition-transform duration-200",
-                        openDropdown === link.label && "rotate-180",
+                        hoveredNavLabel === link.label && "rotate-180",
                       )}
                     />
                   </button>
-                  {openDropdown === link.label && (
+                  {hoveredNavLabel === link.label && (
                     <div className="absolute top-full left-0 w-52 pt-1">
                       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xl shadow-black/40">
                         {link.children.map((child) => (
@@ -172,21 +172,31 @@ export function NavbarClient({ user }: NavbarClientProps) {
 
                 <div className="relative">
                   <button
-                    onClick={() => setOpenDropdown(openDropdown === 'user' ? null : 'user')}
+                    type="button"
+                    onClick={() => setIsUserMenuOpen((current) => !current)}
                     className="flex items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-secondary"
                   >
-                    <img
-                      src={getAvatarUrl(user)}
-                      alt={user.username}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
+                    <span className="relative h-8 w-8 overflow-hidden rounded-full">
+                      <Image
+                        src={getAvatarUrl(user)}
+                        alt={user.username}
+                        fill
+                        sizes="32px"
+                        className="object-cover"
+                      />
+                    </span>
                     <span className="hidden md:inline text-sm font-medium text-foreground">
                       {user.username}
                     </span>
-                    <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", openDropdown === 'user' && "rotate-180")} />
+                    <ChevronDown
+                      className={cn(
+                        "h-3.5 w-3.5 text-muted-foreground transition-transform",
+                        isUserMenuOpen && "rotate-180",
+                      )}
+                    />
                   </button>
 
-                  {openDropdown === 'user' && (
+                  {isUserMenuOpen && (
                     <div className="absolute right-0 top-full mt-1 w-48">
                       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xl">
                         <div className="border-b border-border px-4 py-3">
@@ -197,7 +207,7 @@ export function NavbarClient({ user }: NavbarClientProps) {
                           <Link
                             href={`/user/${user.username}`}
                             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                            onClick={() => setOpenDropdown(null)}
+                            onClick={() => setIsUserMenuOpen(false)}
                           >
                             <UserIcon className="h-4 w-4" />
                             Profile
@@ -205,12 +215,13 @@ export function NavbarClient({ user }: NavbarClientProps) {
                           <Link
                             href="/settings"
                             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                            onClick={() => setOpenDropdown(null)}
+                            onClick={() => setIsUserMenuOpen(false)}
                           >
                             <Settings className="h-4 w-4" />
                             Settings
                           </Link>
                           <button
+                            type="button"
                             onClick={() => logout()}
                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                           >
@@ -244,6 +255,7 @@ export function NavbarClient({ user }: NavbarClientProps) {
             )}
 
             <button
+              type="button"
               className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground lg:hidden"
               onClick={() => setMobileOpen((current) => !current)}
               aria-label="Toggle mobile menu"

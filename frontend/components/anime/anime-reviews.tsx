@@ -12,7 +12,12 @@ export function AnimeReviews({ reviews, averageScore }: AnimeReviewsProps) {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-2xl text-foreground">Reviews</h2>
-        <span className="text-sm text-muted-foreground">{reviews.length} reviews</span>
+        <div className="text-right">
+          <p className="text-sm text-muted-foreground">{reviews.length} reviews</p>
+          <p className="text-xs text-muted-foreground">
+            Community average: {averageScore.toFixed(1)} / 10
+          </p>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -44,7 +49,10 @@ export function AnimeReviews({ reviews, averageScore }: AnimeReviewsProps) {
 
             {/* Footer */}
             <div className="flex items-center gap-2 pt-1 border-t border-border">
-              <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
+              <button
+                type="button"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+              >
                 <ThumbsUp className="w-3.5 h-3.5" />
                 Helpful ({review.helpful.toLocaleString()})
               </button>

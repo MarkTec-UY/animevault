@@ -1,4 +1,6 @@
+import Image from "next/image"
 import Link from "next/link"
+
 import type { AnimeData } from "@/lib/types/anime"
 import { getAnimeUrl } from "@/lib/utils/anime-urls"
 
@@ -15,11 +17,15 @@ export function AnimeCard({ anime, className = "" }: AnimeCardProps) {
   return (
     <Link href={getAnimeUrl(anime)} className={className}>
       <div className="group">
-        <img
-          src={anime.poster}
-          alt={anime.title}
-          className="w-full rounded-lg object-cover"
-        />
+        <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
+          <Image
+            src={anime.poster}
+            alt={anime.title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          />
+        </div>
         <h3 className="mt-2 font-semibold text-sm line-clamp-2 group-hover:text-primary">
           {anime.title}
         </h3>

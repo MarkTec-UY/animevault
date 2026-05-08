@@ -7,10 +7,6 @@ export function sanitizeHtml(html: string | null | undefined): string {
 
   // List of allowed tags (formatting only - no attributes)
   const allowedTags = ['strong', 'b', 'em', 'i', 'u', 'br']
-  const allowedTagsRegex = new RegExp(
-    `</?(${ allowedTags.join('|') })\s*>`,
-    'gi'
-  )
 
   return html
     .replace(/<br\s*\/?>/gi, '<br />') // Normalize <br> tags

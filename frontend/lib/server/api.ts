@@ -14,8 +14,6 @@ export async function apiFetchServer<T = unknown>(
   const headerStore = await headers()
 
   const cookieString = cookieStore.toString()
-  console.log('[apiFetchServer] cookies:', cookieString)
-  console.log('[apiFetchServer] endpoint:', endpoint)
 
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -46,12 +44,14 @@ export async function apiFetchServer<T = unknown>(
     if (!response.ok) {
       const errorBody = await response.text()
       if (response.status === 401) {
-        throw new Error('Unauthorized')
+        throw new Error(errorBody || 'Unauthorized')
       }
       if (response.status === 404) {
-        throw new Error('Not found')
+        throw new Error(errorBody || 'Not found')
       }
-      throw new Error(`API error: ${response.status} ${response.statusText}`)
+      throw new Error(
+        errorBody || `API error: ${response.status} ${response.statusText}`
+      )
     }
 
     const contentType = response.headers.get('content-type')

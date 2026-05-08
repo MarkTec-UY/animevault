@@ -19,7 +19,7 @@ import { updateAnimeEntry } from "@/lib/api/anime-library"
 const STATUS_OPTIONS: { value: LibraryStatus; label: string }[] = [
   { value: "planning", label: "Plan to Watch" },
   { value: "watching", label: "Watching" },
-  { value: "on_hold", label: "On Hold" },
+  { value: "paused", label: "On Hold" },
   { value: "dropped", label: "Dropped" },
   { value: "completed", label: "Completed" },
 ]
@@ -50,7 +50,7 @@ export function LibraryEditModal({ item, onClose, onUpdate }: LibraryEditModalPr
         finalProgress = maxEpisodes
       }
       
-      const result = await updateAnimeEntry(item.anime_id, {
+      await updateAnimeEntry(item.anime_id, {
         status,
         progress_episodes: finalProgress,
         score,
