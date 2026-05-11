@@ -5,6 +5,8 @@ import type { AnimeData } from "@/lib/types/anime"
  * e.g., "Cowboy Bebop" -> "Cowboy-Bebop"
  */
 export function titleToSlug(title: string): string {
+  if (!title) return "unknown"
+  
   return title
     .toLowerCase()
     .replace(/[^\w\s-]/g, "") // Remove special characters

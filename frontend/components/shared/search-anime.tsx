@@ -286,18 +286,9 @@ export function SearchAnime() {
           ) : results && results.length > 0 ? (
             <ul className="max-h-96 overflow-y-auto custom-scrollbar">
               {results.map((anime) => {
-                const title =
-                  anime.preferred_title ||
-                  anime.titles?.romaji ||
-                  anime.titles?.english ||
-                  "Unknown"
-                const poster =
-                  anime.cover_image?.large ||
-                  anime.cover?.image?.large ||
-                  "/images/anime-default.jpg"
-                const year =
-                  anime.startDate?.year ||
-                  (anime.start_date ? new Date(anime.start_date).getFullYear() : null)
+                const title = anime.title
+                const poster = anime.poster
+                const year = anime.year
 
                 return (
                   <li key={anime.id}>
@@ -324,11 +315,9 @@ export function SearchAnime() {
                       </div>
 
                       {/* Format Badge */}
-                      {anime.format && (
+                      {anime.type && (
                         <div className="inline-flex px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium shrink-0">
-                          {typeof anime.format === "string"
-                            ? anime.format.substring(0, 3).toUpperCase()
-                            : anime.format.code?.substring(0, 3).toUpperCase()}
+                          {anime.type.substring(0, 3).toUpperCase()}
                         </div>
                       )}
                     </Link>

@@ -118,7 +118,7 @@ export async function fetchAnimeBySlug(slug: string): Promise<AnimeData | null> 
 /**
  * Transform API response to AnimeData format
  */
-function transformApiResponseToAnimeData(apiData: AnimeApiResponse): AnimeData {
+export function transformApiResponseToAnimeData(apiData: AnimeApiResponse): AnimeData {
   // Extract title
   const title = 
     apiData.preferred_title ||

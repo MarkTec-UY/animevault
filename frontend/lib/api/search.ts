@@ -31,14 +31,14 @@ export interface SearchAnimeResponse {
 /**
  * Search anime with advanced filters from the backend API
  */
-export async function searchAnime(filters: AnimeFilters | string, limit: number = 10): Promise<AnimeApiResponse[]> {
+export async function searchAnime(filters: AnimeFilters | string, limit: number = 10): Promise<SearchAnimeResponse> {
   // Handle legacy string query
   const searchParams = typeof filters === "string" 
     ? { search: filters, per_page: limit } 
     : { ...filters, per_page: filters.per_page || limit }
 
   if (searchParams.search && !searchParams.search.trim() && Object.keys(searchParams).length === 1) {
-    return []
+    return { data: [], meta: { current_page: 1, from: 0, last_page: 1, per_page: limit, to: 0, total: 0 } }
   }
 
   try {
@@ -55,10 +55,9 @@ export async function searchAnime(filters: AnimeFilters | string, limit: number 
     })
 
     const endpoint = `${API_CONFIG.endpoints.anime.list}?${queryParams.toString()}`
-    const data = await apiFetch<SearchAnimeResponse>(endpoint)
-    return data.data || []
+    return await apiFetch<SearchAnimeResponse>(endpoint)
   } catch (error) {
     console.error(`Failed to search anime:`, error)
-    return []
+    return { data: [], meta: { current_page: 1, from: 0, last_page: 1, per_page: limit, to: 0, total: 0 } }
   }
 }
