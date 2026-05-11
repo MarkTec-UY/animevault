@@ -2,6 +2,20 @@ import { API_CONFIG } from "@/lib/api-config"
 import { apiFetch } from "./client"
 import type { AnimeApiResponse } from "./anime"
 
+export interface AnimeFilters {
+  search?: string
+  status?: string | string[]
+  format?: string | string[]
+  season?: string | string[]
+  source?: string | string[]
+  genres?: string | string[]
+  year?: number
+  is_adult?: boolean
+  sort?: string
+  per_page?: number
+  page?: number
+}
+
 export interface SearchAnimeResponse {
   data: AnimeApiResponse[]
   meta: {
@@ -15,25 +29,36 @@ export interface SearchAnimeResponse {
 }
 
 /**
- * Search anime by title or ID from the backend API
+ * Search anime with advanced filters from the backend API
  */
-export async function searchAnime(query: string, limit: number = 10): Promise<AnimeApiResponse[]> {
-  if (!query.trim()) {
+export async function searchAnime(filters: AnimeFilters | string, limit: number = 10): Promise<AnimeApiResponse[]> {
+  // Handle legacy string query
+  const searchParams = typeof filters === "string" 
+    ? { search: filters, per_page: limit } 
+    : { ...filters, per_page: filters.per_page || limit }
+
+  if (searchParams.search && !searchParams.search.trim() && Object.keys(searchParams).length === 1) {
     return []
   }
 
   try {
-    const endpoint = `${API_CONFIG.endpoints.anime.list}?search=${encodeURIComponent(query)}&per_page=${limit}`
+    const queryParams = new URLSearchParams()
+    
+    Object.entries(searchParams).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === "") return
+      
+      if (Array.isArray(value)) {
+        queryParams.append(key, value.join(","))
+      } else {
+        queryParams.append(key, value.toString())
+      }
+    })
+
+    const endpoint = `${API_CONFIG.endpoints.anime.list}?${queryParams.toString()}`
     const data = await apiFetch<SearchAnimeResponse>(endpoint)
     return data.data || []
   } catch (error) {
-    console.error(`Failed to search anime for query "${query}":`, error)
-    
-    // Log the current API URL for debugging
-    if (typeof window !== "undefined") {
-      console.debug(`API URL: ${API_CONFIG.baseUrl}`)
-    }
-    
+    console.error(`Failed to search anime:`, error)
     return []
   }
 }
