@@ -131,10 +131,19 @@ class AniListAnimeImporter
                     break;
                 }
 
-                $pageMedia = collect($result['media'])
+                $bucketMedia = $this->filterMediaByStartDateBucket($result['media'], $bucket);
+                $pageMedia = collect($bucketMedia)
                     ->filter(fn (array $anime): bool => (int) $anime['id'] >= $startId)
                     ->values()
                     ->all();
+
+                $this->reportDateRangeImportStatus(
+                    result: $result,
+                    bucket: $bucket,
+                    bucketMedia: $bucketMedia,
+                    pageMedia: $pageMedia,
+                    output: $output,
+                );
 
                 $this->persistMediaBatch(
                     media: $pageMedia,
@@ -355,6 +364,66 @@ class AniListAnimeImporter
     }
 
     /**
+     * @param  list<array<string, mixed>>  $media
+     * @param  array{year:int,label:string,start_date_greater:int|null,start_date_lesser:int|null}  $bucket
+     * @return list<array<string, mixed>>
+     */
+    private function filterMediaByStartDateBucket(array $media, array $bucket): array
+    {
+        return collect($media)
+            ->filter(function (array $anime) use ($bucket): bool {
+                $startDateInt = $this->resolveAnimeStartDateInt($anime['startDate'] ?? null);
+
+                if ($startDateInt === null) {
+                    return false;
+                }
+
+                $startDateGreater = $bucket['start_date_greater'];
+                $startDateLesser = $bucket['start_date_lesser'];
+
+                if ($startDateGreater !== null && $startDateInt <= $startDateGreater) {
+                    return false;
+                }
+
+                if ($startDateLesser !== null && $startDateInt >= $startDateLesser) {
+                    return false;
+                }
+
+                return true;
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array{media:list<array<string, mixed>>, current_page:int, has_next_page:bool}  $result
+     * @param  array{year:int,label:string,start_date_greater:int|null,start_date_lesser:int|null}  $bucket
+     * @param  list<array<string, mixed>>  $bucketMedia
+     * @param  list<array<string, mixed>>  $pageMedia
+     */
+    private function reportDateRangeImportStatus(array $result, array $bucket, array $bucketMedia, array $pageMedia, ?OutputStyle $output): void
+    {
+        if ($output === null) {
+            return;
+        }
+
+        $totalResults = count($result['media']);
+        $discardedOutOfRange = $totalResults - count($bucketMedia);
+        $discardedById = count($bucketMedia) - count($pageMedia);
+        $message = " · Rango {$bucket['label']}, pagina {$result['current_page']}: ".count($pageMedia)." anime listos para importar.";
+
+        if ($discardedOutOfRange > 0) {
+            $message .= " {$discardedOutOfRange} descartados por fecha fuera del rango.";
+        }
+
+        if ($discardedById > 0) {
+            $message .= " {$discardedById} descartados por ID.";
+        }
+
+        $output->writeln($message);
+    }
+
+    /**
      * @return array{imported:int, checked:int, pages:int, last_id:int}
      */
     private function makeSummary(int $startId): array
@@ -381,5 +450,21 @@ class AniListAnimeImporter
             ?? $anime['title']['english']
             ?? $anime['title']['native']
             ?? 'Sin titulo';
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $startDate
+     */
+    private function resolveAnimeStartDateInt(?array $startDate): ?int
+    {
+        if (! is_array($startDate) || ! is_numeric($startDate['year'] ?? null)) {
+            return null;
+        }
+
+        $year = (int) $startDate['year'];
+        $month = is_numeric($startDate['month'] ?? null) ? (int) $startDate['month'] : 0;
+        $day = is_numeric($startDate['day'] ?? null) ? (int) $startDate['day'] : 0;
+
+        return ($year * 10000) + ($month * 100) + $day;
     }
 }
