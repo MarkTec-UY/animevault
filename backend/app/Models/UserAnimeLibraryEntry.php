@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserAnimeLibraryEntry extends Model
 {
-    protected $table = 'user_anime_library';
+    protected $table = 'schema_user.user_anime_library';
 
     protected $fillable = [
         'user_id',

@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_anime_notifications', function (Blueprint $table): void {
+        Schema::create('schema_user.user_anime_notifications', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('schema_user.users')->cascadeOnDelete();
             $table->integer('anime_id');
             $table->string('type');
             $table->integer('episode');
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_anime_notifications');
+        Schema::dropIfExists('schema_user.user_anime_notifications');
     }
 };

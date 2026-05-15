@@ -36,6 +36,8 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $table = 'schema_user.users';
+
     public const DEFAULT_TIMEZONE = 'America/Montevideo';
 
     public const DEFAULT_PREFERRED_TITLE_LANGUAGE = 'english';
@@ -299,7 +301,7 @@ class User extends Authenticatable
 
     public function favoriteAnime(): BelongsToMany
     {
-        return $this->belongsToMany(Anime::class, 'user_anime_favorite', 'user_id', 'anime_id')
+        return $this->belongsToMany(Anime::class, 'schema_user.user_anime_favorite', 'user_id', 'anime_id')
             ->withPivot('created_at');
     }
 

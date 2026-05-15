@@ -12,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_anime_library', function (Blueprint $table): void {
+        Schema::create('schema_user.user_anime_library', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('schema_user.users')->cascadeOnDelete();
             $table->integer('anime_id');
             $table->enum('status', ['watching', 'completed', 'paused', 'dropped', 'planning']);
             $table->integer('progress_episodes')->default(0);
@@ -30,8 +30,8 @@ return new class extends Migration
             $table->index(['anime_id', 'status'], 'idx_user_anime_library_anime_status');
         });
 
-        Schema::create('user_anime_favorite', function (Blueprint $table): void {
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+        Schema::create('schema_user.user_anime_favorite', function (Blueprint $table): void {
+            $table->foreignId('user_id')->constrained('schema_user.users')->cascadeOnDelete();
             $table->integer('anime_id');
             $table->timestampTz('created_at')->useCurrent();
 
@@ -42,10 +42,10 @@ return new class extends Migration
 
         if (DB::getDriverName() === 'pgsql') {
             DB::statement(
-                'ALTER TABLE user_anime_library ADD CONSTRAINT user_anime_library_progress_nonnegative CHECK (progress_episodes >= 0)'
+                'ALTER TABLE schema_user.user_anime_library ADD CONSTRAINT user_anime_library_progress_nonnegative CHECK (progress_episodes >= 0)'
             );
             DB::statement(
-                'ALTER TABLE user_anime_library ADD CONSTRAINT user_anime_library_score_range CHECK (score IS NULL OR (score >= 1 AND score <= 10))'
+                'ALTER TABLE schema_user.user_anime_library ADD CONSTRAINT user_anime_library_score_range CHECK (score IS NULL OR (score >= 1 AND score <= 10))'
             );
         }
     }
@@ -55,7 +55,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_anime_favorite');
-        Schema::dropIfExists('user_anime_library');
+        Schema::dropIfExists('schema_user.user_anime_favorite');
+        Schema::dropIfExists('schema_user.user_anime_library');
     }
 };

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserAnimeNotification extends Model
 {
-    protected $table = 'user_anime_notifications';
+    protected $table = 'schema_user.user_anime_notifications';
 
     protected $fillable = [
         'user_id',

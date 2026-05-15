@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserAnimeFavorite extends Model
 {
-    protected $table = 'user_anime_favorite';
+    protected $table = 'schema_user.user_anime_favorite';
 
     public $incrementing = false;
 

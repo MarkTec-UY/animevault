@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Anime extends Model
 {
@@ -87,6 +88,22 @@ class Anime extends Model
         return $this->belongsToMany(ExternalLink::class, 'anime_external_link', 'anime_id', 'external_link_id');
     }
 
+    public function mediaReference(): HasOne
+    {
+        return $this->hasOne(MediaReference::class, 'id', 'id');
+    }
+
+    public function trailer(): HasOne
+    {
+        return $this->hasOne(AnimeTrailer::class, 'anime_id', 'id');
+    }
+
+    public function relatedMedia(): BelongsToMany
+    {
+        return $this->belongsToMany(MediaReference::class, 'anime_relation', 'anime_id', 'related_media_id', 'id', 'id')
+            ->withPivot('relation_type_code', 'sort_order');
+    }
+
     public function trends(): HasMany
     {
         return $this->hasMany(AnimeTrend::class, 'anime_id');
@@ -104,7 +121,7 @@ class Anime extends Model
 
     public function favoritedByUsers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_anime_favorite', 'anime_id', 'user_id')
+        return $this->belongsToMany(User::class, 'schema_user.user_anime_favorite', 'anime_id', 'user_id')
             ->withPivot('created_at');
     }
 

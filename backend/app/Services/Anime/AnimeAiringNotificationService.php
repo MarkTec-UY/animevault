@@ -56,7 +56,7 @@ class AnimeAiringNotificationService
                 ])
                 ->all();
 
-            DB::table('user_anime_notifications')->insertOrIgnore($rows);
+            DB::table('schema_user.user_anime_notifications')->insertOrIgnore($rows);
         }
     }
 
