@@ -1,12 +1,10 @@
-"use client"
-
 import Image from "next/image"
 import Link from "next/link"
 import { Calendar, Clock, Globe, Star, Tv } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { AnimeUserActions } from "@/components/anime/anime-user-actions"
-import { useAiringCountdown } from "@/hooks/use-airing-countdown"
+import { AiringBadge } from "@/components/anime/airing-badge"
 import type { AnimeData } from "@/lib/types/anime"
 
 interface AnimeHeroProps {
@@ -14,7 +12,8 @@ interface AnimeHeroProps {
 }
 
 export function AnimeHero({ anime }: AnimeHeroProps) {
-  const timeLeft = useAiringCountdown(anime.nextAiringAt)
+  const studios = anime.companies?.filter((c) => c.isMain) ?? []
+  const studioName = studios.length > 0 ? studios.map((s) => s.name).join(", ") : anime.studio
 
   return (
     <section className="relative">
@@ -31,7 +30,7 @@ export function AnimeHero({ anime }: AnimeHeroProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-background/60 to-transparent" />
       </div>
 
-      {/* Main info — overlaps the banner */}
+      {/* Main info -- overlaps the banner */}
       <div className="relative -mt-24 sm:-mt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-0">
         <div className="flex flex-col sm:flex-row gap-6 lg:gap-8 items-start">
           {/* Poster */}
@@ -49,10 +48,11 @@ export function AnimeHero({ anime }: AnimeHeroProps) {
                 Airing
               </div>
             )}
-            {timeLeft && anime.nextAiringEpisode && (
-              <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur text-foreground text-xs font-medium px-2 py-1 rounded-full shadow-lg">
-                Ep {anime.nextAiringEpisode}: {timeLeft}
-              </div>
+            {anime.nextAiringAt && anime.nextAiringEpisode && (
+              <AiringBadge
+                nextAiringAt={anime.nextAiringAt}
+                nextAiringEpisode={anime.nextAiringEpisode}
+              />
             )}
           </div>
 
@@ -126,7 +126,7 @@ export function AnimeHero({ anime }: AnimeHeroProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-primary" />
-                <span>{anime.studio}</span>
+                <span>{studioName}</span>
               </div>
             </div>
 

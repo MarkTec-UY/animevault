@@ -20,27 +20,33 @@ export function AnimeStaff({ staff }: AnimeStaffProps) {
   return (
     <section className="space-y-4">
       <h2 className="font-serif text-2xl text-foreground">Staff</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {staff.map((member) => (
-          <div
+          <article
             key={member.entryKey}
-            className="group flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:border-primary/30 transition-all duration-200"
+            className="group flex h-[80px] overflow-hidden rounded-lg bg-card border border-border hover:border-primary/30 transition-all duration-200"
           >
-            <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0 border border-border">
+            {/* Staff image */}
+            <div className="relative w-[60px] shrink-0 overflow-hidden">
               <Image
                 src={member.image}
                 alt={member.name}
                 fill
+                sizes="60px"
                 className="object-cover object-top"
               />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+
+            {/* Staff info */}
+            <div className="flex flex-col justify-between py-2.5 px-3 min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
                 {member.name}
               </p>
-              <p className="text-xs text-muted-foreground truncate">{member.role}</p>
+              <span className="text-[11px] text-muted-foreground">
+                {member.role}
+              </span>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </section>

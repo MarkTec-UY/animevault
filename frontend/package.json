@@ -32,6 +32,7 @@
     "react-dom": "19.2.6",
     "react-hook-form": "^7.75.0",
     "react-intersection-observer": "^10.0.3",
+    "react-player": "^3.4.0",
     "react-resizable-panels": "^4.11.0",
     "recharts": "3.8.0",
     "shadcn": "^4.7.0",

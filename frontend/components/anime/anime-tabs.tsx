@@ -8,27 +8,28 @@ import { AnimeEpisodes } from "@/components/anime/anime-episodes"
 import { AnimeStaff } from "@/components/anime/anime-staff"
 import { AnimeReviews } from "@/components/anime/anime-reviews"
 import { AnimeRelated } from "@/components/anime/anime-related"
+import { AnimeTrailer } from "@/components/anime/anime-trailer"
 import type { AnimeData } from "@/lib/types/anime"
 
 interface AnimeTabsProps {
   anime: AnimeData
 }
 
-type Tab = "Overview" | "Episodes" | "Characters" | "Staff" | "Reviews" | "Related"
+type Tab = "Overview" | "Episodes" | "Characters" | "Staff" | "Reviews" | "Related" | "Trailer"
 
 export function AnimeTabs({ anime }: AnimeTabsProps) {
   const availableTabs = useMemo(() => {
-    const allTabs: Tab[] = ["Overview", "Episodes", "Characters", "Staff", "Reviews", "Related"]
+    const allTabs: Tab[] = ["Overview", "Episodes", "Characters", "Staff", "Reviews", "Related", "Trailer"]
     return allTabs.filter(tab => {
       if (tab === "Episodes") return (anime.episodes_list?.length ?? 0) > 0
       if (tab === "Reviews") return (anime.reviews?.length ?? 0) > 0
+      if (tab === "Trailer") return anime.trailer !== null
       return true
     })
-  }, [anime.episodes_list, anime.reviews])
+  }, [anime.episodes_list, anime.reviews, anime.trailer])
 
   const [active, setActive] = useState<Tab>("Overview")
 
-  // Ensure active tab is always available
   const currentTab = availableTabs.includes(active) ? active : "Overview"
 
   return (
@@ -56,7 +57,7 @@ export function AnimeTabs({ anime }: AnimeTabsProps) {
       {/* Tab content */}
       <div>
         {currentTab === "Overview" && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Synopsis */}
             <section className="space-y-3">
               <h2 className="font-serif text-2xl text-foreground">Synopsis</h2>
@@ -65,6 +66,12 @@ export function AnimeTabs({ anime }: AnimeTabsProps) {
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(anime.synopsis) }}
               />
             </section>
+
+            {/* Trailer preview in overview */}
+            {anime.trailer && (
+              <AnimeTrailer trailer={anime.trailer} title={anime.title} />
+            )}
+
             {/* Characters preview */}
             <AnimeCharacters characters={anime.characters} />
           </div>
@@ -74,6 +81,9 @@ export function AnimeTabs({ anime }: AnimeTabsProps) {
         {currentTab === "Staff" && <AnimeStaff staff={anime.staff} />}
         {currentTab === "Reviews" && <AnimeReviews reviews={anime.reviews} averageScore={anime.score} />}
         {currentTab === "Related" && <AnimeRelated related={anime.related} />}
+        {currentTab === "Trailer" && anime.trailer && (
+          <AnimeTrailer trailer={anime.trailer} title={anime.title} />
+        )}
       </div>
     </div>
   )

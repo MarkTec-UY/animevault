@@ -154,6 +154,11 @@ class AnimeCatalogService
                     ])
                     ->values()
                     ->all(),
+                'trailer' => $anime->trailer ? [
+                    'id' => $anime->trailer->trailer_id,
+                    'site' => $anime->trailer->site,
+                    'thumbnail' => $anime->trailer->thumbnail_url,
+                ] : null,
             ],
         );
 
@@ -252,6 +257,7 @@ class AnimeCatalogService
                 ])
                 ->with('type:code,description')
                 ->orderBy('external_link.site'),
+            'trailer',
             'trends' => fn (HasMany $relation) => $relation
                 ->orderBy('trend_date')
                 ->orderBy('episode'),

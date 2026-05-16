@@ -4,7 +4,6 @@ import { useState } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import type { Character } from "@/lib/types/anime"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 interface AnimeCharactersProps {
@@ -12,20 +11,18 @@ interface AnimeCharactersProps {
   isManga?: boolean
 }
 
-const INITIAL_VISIBLE_CHARACTERS = 6
+const INITIAL_VISIBLE = 6
 
 export function AnimeCharacters({ characters, isManga = false }: AnimeCharactersProps) {
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_CHARACTERS)
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
 
   const visibleCharacters = characters.slice(0, visibleCount)
-  const hasMoreCharacters = visibleCount < characters.length
+  const hasMore = visibleCount < characters.length
 
   if (characters.length === 0) {
     return (
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-serif text-2xl text-foreground">Characters</h2>
-        </div>
+        <h2 className="font-serif text-2xl text-foreground">Characters</h2>
         <div className="rounded-2xl border border-dashed border-border/70 bg-card/40 px-6 py-12 text-center text-sm text-muted-foreground">
           Character information is not available yet for this title.
         </div>
@@ -35,103 +32,89 @@ export function AnimeCharacters({ characters, isManga = false }: AnimeCharacters
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-serif text-2xl text-foreground">Characters</h2>
-      </div>
+      <h2 className="font-serif text-2xl text-foreground">Characters</h2>
+
       <div className={cn(
-        "grid gap-4 md:grid-cols-2",
-        isManga ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-2 xl:grid-cols-3"
+        "grid gap-3",
+        isManga ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1 lg:grid-cols-2"
       )}>
         {visibleCharacters.map((char) => {
-          const primaryVoiceActor =
-            char.voiceActors?.find((voiceActor) => voiceActor.language === "Japanese") ||
+          const primaryVA =
+            char.voiceActors?.find((va) => va.language === "Japanese") ||
             char.voiceActors?.[0]
 
           return (
             <article
-              key={`${char.id}:${primaryVoiceActor?.id ?? "no-va"}:${char.role}`}
-              className="group overflow-hidden rounded-2xl border border-border/70 bg-card/70 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-xl hover:shadow-black/20"
+              key={`${char.id}:${primaryVA?.id ?? "no-va"}:${char.role}`}
+              className="group flex h-[100px] overflow-hidden rounded-lg bg-card border border-border hover:border-primary/30 transition-all duration-200"
             >
-              <div className="flex min-h-28 h-full">
-                {/* Character Image */}
-                <div className="relative w-20 shrink-0 overflow-hidden border-r border-border/60 sm:w-24">
-                  <Image
-                    src={char.image}
-                    alt={char.name}
-                    fill
-                    sizes="(max-width: 640px) 80px, 96px"
-                    className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
+              {/* Character image */}
+              <div className="relative w-[70px] shrink-0 overflow-hidden">
+                <Image
+                  src={char.image}
+                  alt={char.name}
+                  fill
+                  sizes="70px"
+                  className="object-cover object-top"
+                />
+              </div>
 
-                <div className={cn(
-                  "flex-1 bg-[linear-gradient(135deg,rgba(14,23,40,0.96),rgba(18,31,52,0.92))]",
-                  !isManga && "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+              {/* Character info */}
+              <div className="flex flex-col justify-between py-2.5 px-3 min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                  {char.name}
+                </p>
+                <span className={cn(
+                  "text-[11px] font-medium w-fit",
+                  char.role.toLowerCase().includes("main")
+                    ? "text-primary"
+                    : "text-muted-foreground"
                 )}>
-                  {/* Character Info */}
-                  <div className="flex min-w-0 flex-col justify-between gap-3 px-3 py-3 sm:px-4">
-                    <div className="space-y-1">
-                      <p className="line-clamp-2 text-sm font-semibold leading-tight text-slate-50">
-                        {char.name}
-                      </p>
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className={
-                        char.role.toLowerCase().includes("main")
-                          ? "w-fit border-primary/40 bg-primary/15 text-[11px] text-primary"
-                          : "w-fit border-white/10 bg-white/8 text-[11px] text-slate-300"
-                      }
-                    >
-                      {char.role}
-                    </Badge>
+                  {char.role}
+                </span>
+              </div>
+
+              {/* Voice actor info (anime only) */}
+              {!isManga && primaryVA && (
+                <>
+                  <div className="flex flex-col justify-between py-2.5 px-3 min-w-0 text-right">
+                    <p className="text-sm font-medium text-foreground leading-tight line-clamp-2">
+                      {primaryVA.name}
+                    </p>
+                    <span className="text-[11px] text-muted-foreground">
+                      {primaryVA.language ?? "Unknown"}
+                    </span>
                   </div>
 
-                  {/* Voice Actor Info (Hidden for Manga) */}
-                  {!isManga && (
-                    <>
-                      <div className="flex min-w-0 flex-col justify-between gap-3 border-l border-white/10 px-3 py-3 text-right sm:px-4">
-                        <div className="space-y-1">
-                          <p className="line-clamp-2 text-sm font-medium leading-tight text-slate-100">
-                            {primaryVoiceActor?.name || "Voice actor unavailable"}
-                          </p>
-                        </div>
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-sky-200/80">
-                          {primaryVoiceActor?.language || "Unknown"}
-                        </p>
-                      </div>
-
-                      {/* Voice Actor Image */}
-                      <div className="relative w-20 shrink-0 overflow-hidden border-l border-border/60 sm:w-24">
-                        <Image
-                          src={primaryVoiceActor?.image || "/images/avatar.jpg"}
-                          alt={primaryVoiceActor?.name || "Voice actor unavailable"}
-                          fill
-                          sizes="(max-width: 640px) 80px, 96px"
-                          className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
+                  {/* Voice actor image */}
+                  <div className="relative w-[70px] shrink-0 overflow-hidden">
+                    <Image
+                      src={primaryVA.image}
+                      alt={primaryVA.name}
+                      fill
+                      sizes="70px"
+                      className="object-cover object-top"
+                    />
+                  </div>
+                </>
+              )}
             </article>
           )
         })}
       </div>
 
-      {hasMoreCharacters ? (
+      {hasMore && (
         <div className="flex justify-center pt-2">
           <Button
             variant="outline"
             size="lg"
-            onClick={() => setVisibleCount((currentCount) => currentCount + INITIAL_VISIBLE_CHARACTERS)}
-            className="rounded-full border-border/70 bg-card/70 px-6"
+            onClick={() => setVisibleCount((c) => c + INITIAL_VISIBLE)}
+            className="rounded-full border-border bg-card px-6 hover:border-primary/30 hover:text-primary"
           >
-            Load more characters
+            Show more characters
           </Button>
         </div>
-      ) : null}
+      )}
     </section>
   )
 }

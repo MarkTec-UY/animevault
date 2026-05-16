@@ -1,6 +1,6 @@
 import { API_CONFIG } from "@/lib/api-config"
 import { apiFetch } from "@/lib/api/client"
-import type { AnimeData, Character, RelatedAnime, StaffMember } from "@/lib/types/anime"
+import type { AnimeData, Character, RelatedAnime, StaffMember, Company, ExternalLink, Trailer } from "@/lib/types/anime"
 
 export interface AnimeApiResponse {
   id: number
@@ -82,6 +82,25 @@ export interface AnimeApiResponse {
   }
   is_favourite?: boolean
   isFavourite?: boolean
+  trailer?: {
+    id?: string
+    site?: string
+    thumbnail?: string | null
+  } | null
+  companies?: Array<{
+    id: number
+    name: string
+    is_main: boolean
+  }>
+  external_links?: Array<{
+    id: number
+    site: string
+    url: string
+    type?: string | null
+    language?: string | null
+    color?: string | null
+    icon?: string | null
+  }>
   [key: string]: unknown
 }
 
@@ -288,6 +307,31 @@ export function transformApiResponseToAnimeData(
     reviews: [],
     related: extras.relations.map(transformAnimeRelation),
     scoreBreakdown: [],
+    trailer: apiData.trailer
+      ? {
+          id: String(apiData.trailer.id ?? ""),
+          site: apiData.trailer.site ?? "youtube",
+          thumbnail: apiData.trailer.thumbnail ?? null,
+        }
+      : null,
+    companies: (apiData.companies || []).map(
+      (c): Company => ({
+        id: c.id,
+        name: c.name,
+        isMain: c.is_main,
+      }),
+    ),
+    externalLinks: (apiData.external_links || []).map(
+      (link): ExternalLink => ({
+        id: link.id,
+        site: link.site,
+        url: link.url,
+        type: link.type ?? null,
+        language: link.language ?? null,
+        color: link.color ?? null,
+        icon: link.icon ?? null,
+      }),
+    ),
   }
 }
 

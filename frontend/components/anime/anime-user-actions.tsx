@@ -2,9 +2,8 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { BookmarkCheck, Heart, Loader2, Play, Plus } from "lucide-react"
+import { BookmarkCheck, Heart, Loader2, Plus, Share2, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { useUser } from "@/lib/hooks/use-user"
 import {
@@ -36,22 +35,18 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
   const { user, loading: authLoading } = useUser()
   const [entry, setEntry] = useState<UserAnimeEntry | null>(null)
   const [isFavorite, setIsFavorite] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [hydrated, setHydrated] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
 
-    // If not authenticated, mark as loaded and return
     if (!user) {
-      const timer = setTimeout(() => {
-        setLoading(false)
-      }, 0)
-      return () => clearTimeout(timer)
+      setHydrated(true)
+      return
     }
 
-    // Fetch both entry and favorite status in parallel
     const fetchData = async () => {
       try {
         const [entryData, favStatus] = await Promise.all([
@@ -63,7 +58,7 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
       } catch (error) {
         console.error("Failed to load anime entry:", error)
       } finally {
-        setLoading(false)
+        setHydrated(true)
       }
     }
 
@@ -76,7 +71,6 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
     try {
       const currentFavorite = isFavorite
       await toggleFavorite(anime.id, currentFavorite)
-      // Update only isFavorite state
       setIsFavorite(!currentFavorite)
     } catch (error) {
       console.error("Failed to toggle favorite:", error)
@@ -85,56 +79,12 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
     }
   }
 
-  if (loading || authLoading) {
-    return (
-      <div className="flex flex-wrap gap-3 pt-1">
-        {/* Watch Now Button Skeleton */}
-        <div className="flex items-center gap-2 px-6 py-3 rounded-xl bg-muted animate-pulse">
-          <Skeleton className="w-4 h-4 rounded" />
-          <Skeleton className="w-12 h-4" />
-        </div>
-
-        {/* Add to List Button Skeleton */}
-        <div className="flex items-center gap-2 px-6 py-2 rounded-xl border border-border bg-muted/50 animate-pulse">
-          <Skeleton className="w-4 h-4 rounded" />
-          <Skeleton className="w-10 h-4" />
-        </div>
-
-        {/* Favorite Button Skeleton */}
-        <div className="flex items-center gap-2 px-6 py-2 rounded-xl bg-muted animate-pulse">
-          <Skeleton className="w-4 h-4 rounded" />
-          <Skeleton className="w-10 h-4" />
-        </div>
-
-        {/* Share Button Skeleton */}
-        <div className="flex items-center gap-2 px-6 py-2 rounded-xl bg-muted animate-pulse">
-          <Skeleton className="w-4 h-4 rounded" />
-          <Skeleton className="w-10 h-4" />
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="flex flex-wrap gap-3 pt-1">
-        <Button
-          size="lg"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl"
-          asChild
-        >
-          <a href="/login">
-            <Play className="w-4 h-4 fill-current" />
-            Sign in to track
-          </a>
-        </Button>
-      </div>
-    )
-  }
-
   const isInLibrary = entry !== null
+  const statusLabel = STATUS_OPTIONS.find((s) => s.value === entry?.status)?.label ?? "In List"
 
-  const libraryItem = buildLibraryItem(entry, anime)
+  // Server-rendered default state (no skeleton). Show "Add to List" + "Favorite"
+  // Once hydrated, the real user state replaces the defaults seamlessly.
+  const showSignIn = hydrated && !user
 
   function buildLibraryItem(e: typeof entry, a: AnimeData): LibraryItem {
     if (e) {
@@ -142,7 +92,7 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
         id: e.id,
         user_id: 0,
         anime_id: a.id,
-        status: (e.status as LibraryStatus),
+        status: e.status as LibraryStatus,
         progress_episodes: e.progress_episodes ?? 0,
         score: e.score,
         started_at: null,
@@ -181,119 +131,120 @@ export function AnimeUserActions({ anime }: AnimeUserActionsProps) {
     }
   }
 
+  const libraryItem = buildLibraryItem(entry, anime)
+
   return (
     <>
-      <div className="flex flex-wrap gap-3 pt-1">
-        <Button
-          size="lg"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl"
-          asChild
-        >
-          <a href="#">
-            <Play className="w-4 h-4 fill-current" />
-            Watch Now
-          </a>
-        </Button>
-
-        <Button
-          size="lg"
-          variant="outline"
-          className={cn(
-            "border-border gap-2 rounded-xl",
-            isInLibrary
-              ? "bg-primary/10 border-primary/40 text-primary"
-              : "text-foreground hover:bg-secondary"
-          )}
-          onClick={async () => {
-            if (!isInLibrary && user) {
-              setSaving(true)
-              try {
-                const newEntry = await updateAnimeEntry(anime.id, {
-                  status: "planning",
-                  progress_episodes: 0,
-                })
-                // If already favorited, preserve that state
-                setEntry({
-                  ...newEntry,
-                  is_favorite: isFavorite,
-                })
-              } catch (error) {
-                console.error("Failed to add to list:", error)
-                setSaving(false)
-                return
-              }
-              setSaving(false)
-            }
-            setShowModal(true)
-          }}
-          disabled={saving}
-        >
-          {saving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : isInLibrary ? (
-            <>
-              <BookmarkCheck className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {STATUS_OPTIONS.find((s) => s.value === entry?.status)?.label ??
-                  "In List"}
-              </span>
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Add to List</span>
-            </>
-          )}
-        </Button>
-
-        <Button
-          size="lg"
-          variant="ghost"
-          className={cn(
-            "gap-2 rounded-xl",
-            isFavorite
-              ? "text-rose-500 hover:text-rose-400"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={handleToggleFavorite}
-          disabled={saving}
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        >
-          {saving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Heart className={cn("w-4 h-4", isFavorite && "fill-current")} />
-          )}
-          <span className="hidden sm:inline">
-            {isFavorite ? "Favorited" : "Favorite"}
-          </span>
-        </Button>
-
-        <Button
-          size="lg"
-          variant="ghost"
-          className="gap-2 rounded-xl text-muted-foreground hover:text-foreground"
-          aria-label="Share"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      <div className="flex flex-wrap items-center gap-3 pt-1">
+        {/* Main list action -- pill-shaped */}
+        {showSignIn ? (
+          <Button
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-full px-6 font-medium"
+            asChild
           >
-            <circle cx="18" cy="5" r="3" />
-            <circle cx="6" cy="12" r="3" />
-            <circle cx="18" cy="19" r="3" />
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-          </svg>
-          <span className="hidden sm:inline">Share</span>
-        </Button>
+            <a href="/login">
+              <Plus className="w-4 h-4" />
+              Sign in to track
+            </a>
+          </Button>
+        ) : (
+          <Button
+            size="lg"
+            className={cn(
+              "gap-2 rounded-full px-6 font-medium transition-all duration-200",
+              isInLibrary
+                ? "bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25"
+                : "bg-primary hover:bg-primary/90 text-primary-foreground"
+            )}
+            onClick={async () => {
+              if (!isInLibrary && user) {
+                setSaving(true)
+                try {
+                  const newEntry = await updateAnimeEntry(anime.id, {
+                    status: "planning",
+                    progress_episodes: 0,
+                  })
+                  setEntry({
+                    ...newEntry,
+                    is_favorite: isFavorite,
+                  })
+                } catch (error) {
+                  console.error("Failed to add to list:", error)
+                  setSaving(false)
+                  return
+                }
+                setSaving(false)
+              }
+              setShowModal(true)
+            }}
+            disabled={saving}
+          >
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isInLibrary ? (
+              <>
+                <BookmarkCheck className="w-4 h-4" />
+                {statusLabel}
+                <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                Add to List
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Episode progress -- shown when in library */}
+        {isInLibrary && anime.episodes > 0 && (
+          <div className="flex items-center gap-2 bg-card border border-border rounded-full px-4 py-2">
+            <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-300"
+                style={{
+                  width: `${Math.min(
+                    ((entry?.progress_episodes ?? 0) / anime.episodes) * 100,
+                    100
+                  )}%`,
+                }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground font-medium">
+              {entry?.progress_episodes ?? 0}/{anime.episodes}
+            </span>
+          </div>
+        )}
+
+        {/* Favorite button */}
+        {!showSignIn && (
+          <button
+            onClick={handleToggleFavorite}
+            disabled={saving}
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            className={cn(
+              "flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-200",
+              isFavorite
+                ? "bg-rose-500/15 border-rose-500/30 text-rose-500 hover:bg-rose-500/25"
+                : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+            )}
+          >
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Heart className={cn("w-4 h-4", isFavorite && "fill-current")} />
+            )}
+          </button>
+        )}
+
+        {/* Share button */}
+        <button
+          aria-label="Share"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all duration-200"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
       </div>
 
       {showModal && (

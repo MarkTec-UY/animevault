@@ -1,8 +1,6 @@
-"use client"
-
 import Image from "next/image"
 import Link from "next/link"
-import { BookOpen, Calendar, Globe, Star, Layers, Heart, Plus, Play } from "lucide-react"
+import { BookOpen, Calendar, Globe, Star, Layers, Heart, Plus } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,7 +26,7 @@ export function MangaHero({ manga }: MangaHeroProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-background/60 to-transparent" />
       </div>
 
-      {/* Main info — overlaps the banner */}
+      {/* Main info -- overlaps the banner */}
       <div className="relative -mt-24 sm:-mt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-0">
         <div className="flex flex-col sm:flex-row gap-6 lg:gap-8 items-start">
           {/* Poster */}
@@ -70,7 +68,7 @@ export function MangaHero({ manga }: MangaHeroProps) {
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Rank</p>
-                <p className="text-foreground font-bold text-lg leading-tight">#{manga.rank || 'N/A'}</p>
+                <p className="text-foreground font-bold text-lg leading-tight">#{manga.rank || "N/A"}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Popularity</p>
@@ -108,7 +106,7 @@ export function MangaHero({ manga }: MangaHeroProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-primary" />
-                <span>{manga.chapters > 0 ? `${manga.chapters} chapters` : 'Chapters: TBA'}</span>
+                <span>{manga.chapters > 0 ? `${manga.chapters} chapters` : "Chapters: TBA"}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-primary" />
@@ -116,33 +114,25 @@ export function MangaHero({ manga }: MangaHeroProps) {
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex flex-wrap gap-3 pt-1">
+            {/* Action buttons -- pill-style to match anime redesign */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
               <Button
                 size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-full px-6 font-medium"
+                asChild
               >
-                <Play className="w-4 h-4 fill-current" />
-                Read Now
+                <a href="/login">
+                  <Plus className="w-4 h-4" />
+                  Sign in to track
+                </a>
               </Button>
 
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-border gap-2 rounded-xl text-foreground hover:bg-secondary"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Add to List</span>
-              </Button>
-
-              <Button
-                size="lg"
-                variant="ghost"
-                className="gap-2 rounded-xl text-muted-foreground hover:text-foreground"
+              <button
+                aria-label="Add to favorites"
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all duration-200"
               >
                 <Heart className="w-4 h-4" />
-                <span className="hidden sm:inline">Favorite</span>
-              </Button>
+              </button>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { API_CONFIG } from "@/lib/api-config"
 import { apiFetch } from "@/lib/api/client"
 import type { MangaData, RelatedMedia } from "@/lib/types/manga"
-import type { Character, StaffMember } from "@/lib/types/anime"
+import type { Character, StaffMember, Trailer, ExternalLink } from "@/lib/types/anime"
 
 export interface MangaApiResponse {
   id: number
@@ -44,6 +44,20 @@ export interface MangaApiResponse {
     description?: string
     category?: string
     rank?: number
+  }>
+  trailer?: {
+    id?: string
+    site?: string
+    thumbnail?: string | null
+  } | null
+  external_links?: Array<{
+    id: number
+    site: string
+    url: string
+    type?: string | null
+    language?: string | null
+    color?: string | null
+    icon?: string | null
   }>
   [key: string]: unknown
 }
@@ -201,6 +215,24 @@ export function transformApiResponseToMangaData(
     reviews: [],
     related: extras.relations.map(transformMangaRelation),
     scoreBreakdown: [],
+    trailer: apiData.trailer
+      ? {
+          id: String(apiData.trailer.id ?? ""),
+          site: apiData.trailer.site ?? "youtube",
+          thumbnail: apiData.trailer.thumbnail ?? null,
+        }
+      : null,
+    externalLinks: (apiData.external_links || []).map(
+      (link): ExternalLink => ({
+        id: link.id,
+        site: link.site,
+        url: link.url,
+        type: link.type ?? null,
+        language: link.language ?? null,
+        color: link.color ?? null,
+        icon: link.icon ?? null,
+      }),
+    ),
   }
 }
 

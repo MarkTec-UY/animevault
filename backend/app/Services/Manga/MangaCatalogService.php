@@ -133,6 +133,11 @@ class MangaCatalogService
                     ])
                     ->values()
                     ->all(),
+                'trailer' => $manga->trailer ? [
+                    'id' => $manga->trailer->trailer_id,
+                    'site' => $manga->trailer->site,
+                    'thumbnail' => $manga->trailer->thumbnail_url,
+                ] : null,
             ],
         );
 
@@ -211,6 +216,7 @@ class MangaCatalogService
                 ->select('tag.id', 'tag.name', 'tag.description', 'tag.category')
                 ->orderByDesc('schema_manga.manga_tag.rank')
                 ->orderBy('tag.name'),
+            'trailer',
             'externalLinks' => fn (BelongsToMany $relation) => $relation
                 ->select([
                     'external_link.id',

@@ -7,26 +7,27 @@ import { AnimeCharacters } from "@/components/anime/anime-characters"
 import { AnimeStaff } from "@/components/anime/anime-staff"
 import { AnimeReviews } from "@/components/anime/anime-reviews"
 import { AnimeRelated } from "@/components/anime/anime-related"
+import { AnimeTrailer } from "@/components/anime/anime-trailer"
 import type { MangaData } from "@/lib/types/manga"
 
 interface MangaTabsProps {
   manga: MangaData
 }
 
-type Tab = "Overview" | "Characters" | "Staff" | "Reviews" | "Related"
+type Tab = "Overview" | "Characters" | "Staff" | "Reviews" | "Related" | "Trailer"
 
 export function MangaTabs({ manga }: MangaTabsProps) {
   const availableTabs = useMemo(() => {
-    const allTabs: Tab[] = ["Overview", "Characters", "Staff", "Reviews", "Related"]
+    const allTabs: Tab[] = ["Overview", "Characters", "Staff", "Reviews", "Related", "Trailer"]
     return allTabs.filter(tab => {
       if (tab === "Reviews") return (manga.reviews?.length ?? 0) > 0
+      if (tab === "Trailer") return manga.trailer !== null
       return true
     })
-  }, [manga.reviews])
+  }, [manga.reviews, manga.trailer])
 
   const [active, setActive] = useState<Tab>("Overview")
 
-  // Ensure active tab is always available
   const currentTab = availableTabs.includes(active) ? active : "Overview"
 
   return (
@@ -63,7 +64,12 @@ export function MangaTabs({ manga }: MangaTabsProps) {
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(manga.synopsis) }}
               />
             </section>
-            
+
+            {/* Trailer preview in overview */}
+            {manga.trailer && (
+              <AnimeTrailer trailer={manga.trailer} title={manga.title} />
+            )}
+
             {/* Characters preview */}
             <AnimeCharacters characters={manga.characters} isManga={true} />
           </div>
@@ -72,6 +78,9 @@ export function MangaTabs({ manga }: MangaTabsProps) {
         {currentTab === "Staff" && <AnimeStaff staff={manga.staff} />}
         {currentTab === "Reviews" && <AnimeReviews reviews={manga.reviews} averageScore={manga.score} />}
         {currentTab === "Related" && <AnimeRelated related={manga.related} />}
+        {currentTab === "Trailer" && manga.trailer && (
+          <AnimeTrailer trailer={manga.trailer} title={manga.title} />
+        )}
       </div>
     </div>
   )

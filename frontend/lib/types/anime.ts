@@ -59,6 +59,28 @@ export interface RelatedAnime {
   mediaType: "ANIME" | "MANGA"
 }
 
+export interface Trailer {
+  id: string
+  site: string
+  thumbnail: string | null
+}
+
+export interface Company {
+  id: number
+  name: string
+  isMain: boolean
+}
+
+export interface ExternalLink {
+  id: number
+  site: string
+  url: string
+  type: string | null
+  language: string | null
+  color: string | null
+  icon: string | null
+}
+
 export interface AnimeData {
   id: number
   slug: string
@@ -91,4 +113,7 @@ export interface AnimeData {
   reviews: Review[]
   related: RelatedAnime[]
   scoreBreakdown: { label: string; value: number; count: string }[]
+  trailer: Trailer | null
+  companies: Company[]
+  externalLinks: ExternalLink[]
 }
