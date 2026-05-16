@@ -15,7 +15,7 @@ class Tag extends Model
 
     public function anime(): BelongsToMany
     {
-        return $this->belongsToMany(Anime::class, 'anime_tag', 'tag_id', 'anime_id')
+        return $this->belongsToMany(Anime::class, 'schema_anime.anime_tag', 'tag_id', 'anime_id')
             ->withPivot('rank');
     }
 

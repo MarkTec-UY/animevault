@@ -99,6 +99,7 @@ interface MangaStaffApiItem {
   id: number
   preferred_name?: string | null
   role_name?: string | null
+  sort_order?: number | null
   image?: {
     large?: string | null
     medium?: string | null
@@ -281,6 +282,7 @@ function transformMangaCharacter(item: MangaCharacterApiItem): Character {
 function transformMangaStaff(item: MangaStaffApiItem): StaffMember {
   return {
     id: item.id,
+    entryKey: `${item.id}:${item.sort_order ?? "na"}:${item.role_name ?? ""}`,
     name: item.preferred_name || `Staff #${item.id}`,
     role: item.role_name || "Unknown",
     image: item.image?.large || item.image?.medium || "/images/avatar.jpg",

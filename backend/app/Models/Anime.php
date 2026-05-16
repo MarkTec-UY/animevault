@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Anime extends Model
 {
-    protected $table = 'anime';
+    protected $table = 'schema_anime.anime';
 
     public $incrementing = false;
 
@@ -63,18 +63,18 @@ class Anime extends Model
 
     public function genres(): BelongsToMany
     {
-        return $this->belongsToMany(Genre::class, 'anime_genre', 'anime_id', 'genre_name', 'id', 'name');
+        return $this->belongsToMany(Genre::class, 'schema_anime.anime_genre', 'anime_id', 'genre_name', 'id', 'name');
     }
 
     public function tags(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class, 'anime_tag', 'anime_id', 'tag_id')
+        return $this->belongsToMany(Tag::class, 'schema_anime.anime_tag', 'anime_id', 'tag_id')
             ->withPivot('rank');
     }
 
     public function companies(): BelongsToMany
     {
-        return $this->belongsToMany(Company::class, 'anime_company', 'anime_id', 'company_id')
+        return $this->belongsToMany(Company::class, 'schema_anime.anime_company', 'anime_id', 'company_id')
             ->withPivot('is_main');
     }
 
@@ -85,7 +85,7 @@ class Anime extends Model
 
     public function externalLinks(): BelongsToMany
     {
-        return $this->belongsToMany(ExternalLink::class, 'anime_external_link', 'anime_id', 'external_link_id');
+        return $this->belongsToMany(ExternalLink::class, 'schema_anime.anime_external_link', 'anime_id', 'external_link_id');
     }
 
     public function media(): BelongsTo
@@ -105,7 +105,7 @@ class Anime extends Model
 
     public function relatedMedia(): BelongsToMany
     {
-        return $this->belongsToMany(MediaReference::class, 'anime_relation', 'anime_id', 'related_media_id', 'id', 'id')
+        return $this->belongsToMany(MediaReference::class, 'schema_anime.anime_relation', 'anime_id', 'related_media_id', 'id', 'id')
             ->withPivot('relation_type_code', 'sort_order');
     }
 

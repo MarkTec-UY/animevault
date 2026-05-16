@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { sanitizeHtml } from "@/lib/utils/text"
 import { AnimeCharacters } from "@/components/anime/anime-characters"
@@ -14,24 +14,35 @@ interface AnimeTabsProps {
   anime: AnimeData
 }
 
-const tabs = ["Overview", "Episodes", "Characters", "Staff", "Reviews", "Related"] as const
-type Tab = (typeof tabs)[number]
+type Tab = "Overview" | "Episodes" | "Characters" | "Staff" | "Reviews" | "Related"
 
 export function AnimeTabs({ anime }: AnimeTabsProps) {
+  const availableTabs = useMemo(() => {
+    const allTabs: Tab[] = ["Overview", "Episodes", "Characters", "Staff", "Reviews", "Related"]
+    return allTabs.filter(tab => {
+      if (tab === "Episodes") return (anime.episodes_list?.length ?? 0) > 0
+      if (tab === "Reviews") return (anime.reviews?.length ?? 0) > 0
+      return true
+    })
+  }, [anime.episodes_list, anime.reviews])
+
   const [active, setActive] = useState<Tab>("Overview")
+
+  // Ensure active tab is always available
+  const currentTab = availableTabs.includes(active) ? active : "Overview"
 
   return (
     <div className="space-y-6">
       {/* Tab bar */}
       <div className="sticky top-16 z-30 bg-background/90 backdrop-blur-md border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
         <nav className="flex gap-0 overflow-x-auto scrollbar-hide" aria-label="Anime sections">
-          {tabs.map((tab) => (
+          {availableTabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActive(tab)}
               className={cn(
                 "px-4 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
-                active === tab
+                currentTab === tab
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
               )}
@@ -44,7 +55,7 @@ export function AnimeTabs({ anime }: AnimeTabsProps) {
 
       {/* Tab content */}
       <div>
-        {active === "Overview" && (
+        {currentTab === "Overview" && (
           <div className="space-y-6">
             {/* Synopsis */}
             <section className="space-y-3">
@@ -58,11 +69,11 @@ export function AnimeTabs({ anime }: AnimeTabsProps) {
             <AnimeCharacters characters={anime.characters} />
           </div>
         )}
-        {active === "Episodes" && <AnimeEpisodes episodes={anime.episodes_list} />}
-        {active === "Characters" && <AnimeCharacters characters={anime.characters} />}
-        {active === "Staff" && <AnimeStaff staff={anime.staff} />}
-        {active === "Reviews" && <AnimeReviews reviews={anime.reviews} averageScore={anime.score} />}
-        {active === "Related" && <AnimeRelated related={anime.related} />}
+        {currentTab === "Episodes" && <AnimeEpisodes episodes={anime.episodes_list} />}
+        {currentTab === "Characters" && <AnimeCharacters characters={anime.characters} />}
+        {currentTab === "Staff" && <AnimeStaff staff={anime.staff} />}
+        {currentTab === "Reviews" && <AnimeReviews reviews={anime.reviews} averageScore={anime.score} />}
+        {currentTab === "Related" && <AnimeRelated related={anime.related} />}
       </div>
     </div>
   )

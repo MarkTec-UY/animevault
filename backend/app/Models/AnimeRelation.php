@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AnimeRelation extends Model
 {
-    protected $table = 'anime_relation';
+    protected $table = 'schema_anime.anime_relation';
 
     public $incrementing = false;
 

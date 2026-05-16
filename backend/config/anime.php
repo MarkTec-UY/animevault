@@ -2,7 +2,7 @@
 
 return [
     'cache' => [
-        'store' => env('ANIME_API_CACHE_STORE', 'redis'),
+        'store' => env('ANIME_API_CACHE_STORE', env('CACHE_STORE', 'file')),
         'ttls' => [
             'home' => (int) env('ANIME_API_HOME_CACHE_TTL', 300),
             'list' => (int) env('ANIME_API_LIST_CACHE_TTL', 300),

@@ -74,8 +74,8 @@ class AnimeHomeService
     {
         return $this->baseAnimeQuery()
             ->when($excludeAnimeId !== null, fn (Builder $query) => $query->whereKeyNot($excludeAnimeId))
-            ->orderByDesc('anime.popularity')
-            ->orderByDesc('anime.average_score')
+            ->orderByDesc('schema_anime.anime.popularity')
+            ->orderByDesc('schema_anime.anime.average_score')
             ->limit(3)
             ->get();
     }
@@ -88,7 +88,7 @@ class AnimeHomeService
         return $this->baseAnimeQuery()
             ->withMax('trends as peak_trending', 'trending')
             ->orderByDesc('peak_trending')
-            ->orderByDesc('anime.popularity')
+            ->orderByDesc('schema_anime.anime.popularity')
             ->limit(6)
             ->get();
     }
@@ -103,10 +103,10 @@ class AnimeHomeService
         }
 
         return $this->baseAnimeQuery()
-            ->where('anime.season_code', $seasonCode)
-            ->where('anime.season_year', $seasonYear)
-            ->orderByDesc('anime.popularity')
-            ->orderByDesc('anime.average_score')
+            ->where('schema_anime.anime.season_code', $seasonCode)
+            ->where('schema_anime.anime.season_year', $seasonYear)
+            ->orderByDesc('schema_anime.anime.popularity')
+            ->orderByDesc('schema_anime.anime.average_score')
             ->limit(4)
             ->get();
     }
@@ -117,8 +117,8 @@ class AnimeHomeService
     private function topRatedAnime()
     {
         return $this->baseAnimeQuery()
-            ->orderByDesc('anime.average_score')
-            ->orderByDesc('anime.favourites')
+            ->orderByDesc('schema_anime.anime.average_score')
+            ->orderByDesc('schema_anime.anime.favourites')
             ->limit(4)
             ->get();
     }
@@ -128,12 +128,12 @@ class AnimeHomeService
         $season = $this->resolveSeason();
 
         $featured = $this->baseAnimeQuery()
-            ->whereNotNull('anime.banner_image')
-            ->whereNotNull('anime.cover_image_large')
-            ->where('anime.season_code', $season['season_code'])
-            ->where('anime.season_year', $season['season_year'])
-            ->orderByDesc('anime.average_score')
-            ->orderByDesc('anime.popularity')
+            ->whereNotNull('schema_anime.anime.banner_image')
+            ->whereNotNull('schema_anime.anime.cover_image_large')
+            ->where('schema_anime.anime.season_code', $season['season_code'])
+            ->where('schema_anime.anime.season_year', $season['season_year'])
+            ->orderByDesc('schema_anime.anime.average_score')
+            ->orderByDesc('schema_anime.anime.popularity')
             ->first();
 
         if ($featured !== null) {
@@ -141,10 +141,10 @@ class AnimeHomeService
         }
 
         return $this->baseAnimeQuery()
-            ->whereNotNull('anime.banner_image')
-            ->whereNotNull('anime.cover_image_large')
-            ->orderByDesc('anime.average_score')
-            ->orderByDesc('anime.popularity')
+            ->whereNotNull('schema_anime.anime.banner_image')
+            ->whereNotNull('schema_anime.anime.cover_image_large')
+            ->orderByDesc('schema_anime.anime.average_score')
+            ->orderByDesc('schema_anime.anime.popularity')
             ->first();
     }
 
@@ -158,8 +158,8 @@ class AnimeHomeService
         $currentSeasonYear = $now->year;
 
         $currentSeasonExists = Anime::query()
-            ->where('season_code', $currentSeasonCode)
-            ->where('season_year', $currentSeasonYear)
+            ->where('schema_anime.anime.season_code', $currentSeasonCode)
+            ->where('schema_anime.anime.season_year', $currentSeasonYear)
             ->exists();
 
         if ($currentSeasonExists) {
@@ -172,7 +172,7 @@ class AnimeHomeService
 
         $latestSeason = Anime::query()
             ->selectRaw(
-                "anime.season_code, anime.season_year, case anime.season_code
+                "schema_anime.anime.season_code, schema_anime.anime.season_year, case schema_anime.anime.season_code
                     when 'WINTER' then 1
                     when 'SPRING' then 2
                     when 'SUMMER' then 3
@@ -180,10 +180,10 @@ class AnimeHomeService
                     else 0
                 end as season_rank"
             )
-            ->whereNotNull('anime.season_code')
-            ->whereNotNull('anime.season_year')
-            ->groupBy('anime.season_code', 'anime.season_year')
-            ->orderByDesc('anime.season_year')
+            ->whereNotNull('schema_anime.anime.season_code')
+            ->whereNotNull('schema_anime.anime.season_year')
+            ->groupBy('schema_anime.anime.season_code', 'schema_anime.anime.season_year')
+            ->orderByDesc('schema_anime.anime.season_year')
             ->orderByDesc('season_rank')
             ->first();
 
@@ -232,7 +232,9 @@ class AnimeHomeService
         $animeCount = (int) Anime::query()->count();
         $genreCount = (int) Genre::query()->count();
         $studioCount = (int) DB::table('company')->distinct()->count('id');
-        $airingCount = (int) Anime::query()->where('status_code', 'RELEASING')->count();
+        $airingCount = (int) Anime::query()
+            ->where('schema_anime.anime.status_code', 'RELEASING')
+            ->count();
 
         return [
             [
@@ -264,8 +266,8 @@ class AnimeHomeService
     private function baseAnimeQuery(): Builder
     {
         return Anime::query()
-            ->select('anime.*')
-            ->where('anime.is_adult', false)
+            ->select('schema_anime.anime.*')
+            ->where('schema_anime.anime.is_adult', false)
             ->with($this->catalog->summaryRelations());
     }
 

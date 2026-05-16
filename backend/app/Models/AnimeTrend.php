@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AnimeTrend extends Model
 {
-    protected $table = 'anime_trend';
+    protected $table = 'schema_anime.anime_trend';
 
     public $incrementing = false;
 

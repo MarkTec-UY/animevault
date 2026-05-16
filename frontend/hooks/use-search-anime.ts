@@ -17,7 +17,7 @@ export function useSearchAnime(filters: AnimeFilters | string, limit: number = 1
     queryKey: ["search", "anime", { search, ...restFilters, limit }],
     queryFn: async () => {
       const response = await searchAnime(filters, limit)
-      return response.data.map(transformApiResponseToAnimeData)
+      return response.data.map((item) => transformApiResponseToAnimeData(item))
     },
     enabled: Boolean(search && search.length > 0) || Object.keys(restFilters).length > 0,
     staleTime: 30 * 1000, // 30 seconds
@@ -39,7 +39,7 @@ export function useInfiniteSearchAnime(filters: AnimeFilters, firstPageLimit: nu
       const response = await searchAnime({ ...filters, page: pageParam, per_page: perPage })
       
       return {
-        data: response.data.map(transformApiResponseToAnimeData),
+        data: response.data.map((item) => transformApiResponseToAnimeData(item)),
         meta: response.meta
       }
     },

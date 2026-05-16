@@ -17,7 +17,7 @@ export function useSearchManga(filters: MangaFilters | string, limit: number = 1
     queryKey: ["search", "manga", { search, ...restFilters, limit }],
     queryFn: async () => {
       const response = await searchManga(filters, limit)
-      return response.data.map(transformApiResponseToMangaData)
+      return response.data.map((item) => transformApiResponseToMangaData(item))
     },
     enabled: Boolean(search && search.length > 0) || Object.keys(restFilters).length > 0,
     staleTime: 30 * 1000, // 30 seconds
@@ -39,7 +39,7 @@ export function useInfiniteSearchManga(filters: MangaFilters, firstPageLimit: nu
       const response = await searchManga({ ...filters, page: pageParam, per_page: perPage })
       
       return {
-        data: response.data.map(transformApiResponseToMangaData),
+        data: response.data.map((item) => transformApiResponseToMangaData(item)),
         meta: response.meta
       }
     },

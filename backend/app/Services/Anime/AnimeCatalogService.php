@@ -47,18 +47,18 @@ class AnimeCatalogService
             $this->cacheTtl('list'),
             function () use ($filters, $sort, $perPage, $appliedFilters, $user): array {
                 $query = Anime::query()
-                    ->select('anime.*')
+                    ->select('schema_anime.anime.*')
                     ->with($this->summaryRelations())
-                    ->leftJoin('anime_title as title_romaji', function ($join): void {
-                        $join->on('title_romaji.anime_id', '=', 'anime.id')
+                    ->leftJoin('schema_anime.anime_title as title_romaji', function ($join): void {
+                        $join->on('title_romaji.anime_id', '=', 'schema_anime.anime.id')
                             ->where('title_romaji.title_type', '=', 'romaji');
                     })
-                    ->leftJoin('anime_title as title_english', function ($join): void {
-                        $join->on('title_english.anime_id', '=', 'anime.id')
+                    ->leftJoin('schema_anime.anime_title as title_english', function ($join): void {
+                        $join->on('title_english.anime_id', '=', 'schema_anime.anime.id')
                             ->where('title_english.title_type', '=', 'english');
                     })
-                    ->leftJoin('anime_title as title_native', function ($join): void {
-                        $join->on('title_native.anime_id', '=', 'anime.id')
+                    ->leftJoin('schema_anime.anime_title as title_native', function ($join): void {
+                        $join->on('title_native.anime_id', '=', 'schema_anime.anime.id')
                             ->where('title_native.title_type', '=', 'native');
                     });
 
@@ -280,17 +280,17 @@ class AnimeCatalogService
             });
         }
 
-        $this->applyWhereIn($query, 'anime.status_code', $filters['status'] ?? null);
-        $this->applyWhereIn($query, 'anime.format_code', $filters['format'] ?? null);
-        $this->applyWhereIn($query, 'anime.season_code', $filters['season'] ?? null);
-        $this->applyWhereIn($query, 'anime.source_code', $filters['source'] ?? null);
+        $this->applyWhereIn($query, 'schema_anime.anime.status_code', $filters['status'] ?? null);
+        $this->applyWhereIn($query, 'schema_anime.anime.format_code', $filters['format'] ?? null);
+        $this->applyWhereIn($query, 'schema_anime.anime.season_code', $filters['season'] ?? null);
+        $this->applyWhereIn($query, 'schema_anime.anime.source_code', $filters['source'] ?? null);
 
         if (($filters['year'] ?? null) !== null) {
-            $query->where('anime.season_year', (int) $filters['year']);
+            $query->where('schema_anime.anime.season_year', (int) $filters['year']);
         }
 
         if (($filters['is_adult'] ?? null) !== null) {
-            $query->where('anime.is_adult', filter_var($filters['is_adult'], FILTER_VALIDATE_BOOL));
+            $query->where('schema_anime.anime.is_adult', filter_var($filters['is_adult'], FILTER_VALIDATE_BOOL));
         }
 
         $genres = $this->normalizeArray($filters['genres'] ?? null);
@@ -308,14 +308,14 @@ class AnimeCatalogService
     private function applySorting(Builder $query, string $sort): void
     {
         match ($sort) {
-            'score_desc' => $query->orderByDesc('anime.average_score')->orderBy('anime.id'),
-            'favourites_desc' => $query->orderByDesc('anime.favourites')->orderBy('anime.id'),
-            'recently_updated' => $query->orderByDesc('anime.updated_at')->orderBy('anime.id'),
-            'start_date_desc' => $query->orderByDesc('anime.start_date')->orderBy('anime.id'),
+            'score_desc' => $query->orderByDesc('schema_anime.anime.average_score')->orderBy('schema_anime.anime.id'),
+            'favourites_desc' => $query->orderByDesc('schema_anime.anime.favourites')->orderBy('schema_anime.anime.id'),
+            'recently_updated' => $query->orderByDesc('schema_anime.anime.updated_at')->orderBy('schema_anime.anime.id'),
+            'start_date_desc' => $query->orderByDesc('schema_anime.anime.start_date')->orderBy('schema_anime.anime.id'),
             'title_asc' => $query->orderByRaw(
                 'COALESCE(title_english.title, title_romaji.title, title_native.title) ASC'
-            )->orderBy('anime.id'),
-            default => $query->orderByDesc('anime.popularity')->orderBy('anime.id'),
+            )->orderBy('schema_anime.anime.id'),
+            default => $query->orderByDesc('schema_anime.anime.popularity')->orderBy('schema_anime.anime.id'),
         };
     }
 

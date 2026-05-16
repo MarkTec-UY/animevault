@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
 import type { User } from "@/lib/types/auth"
+import { AnimeVaultLogo } from "@/components/shared/anime-vault-logo";
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2363A375' width='100' height='100'/%3E%3Ccircle cx='50' cy='35' r='25' fill='%23fff'/%3E%3Cpath d='M20 90c0-16.5 13.5-30 30-30s30 13.5 30 30' fill='%23fff'/%3E%3C/svg%3E"
 
@@ -95,14 +96,10 @@ export function NavbarClient({ user }: NavbarClientProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="font-serif text-sm font-bold text-primary-foreground">
-                A
-              </span>
-            </div>
-            <span className="text-xl font-bold tracking-tight text-foreground">
+            <AnimeVaultLogo className="w-12 h-12" />
+            {/* <span className="text-xl font-bold tracking-tight text-foreground">
               Anime<span className="text-primary">Vault</span>
-            </span>
+            </span> */}
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">

@@ -355,36 +355,7 @@ export default function AnimeSearchPage() {
 
       {/* Content Grid */}
       <div className="space-y-12">
-        {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6">
-            {Array.from({ length: 18 }).map((_, i) => (
-              <div key={i} className="space-y-4">
-                <div className="aspect-[2/3] rounded-3xl bg-secondary/40 animate-pulse relative overflow-hidden border border-border/50">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-                </div>
-                <div className="space-y-2 px-1">
-                  <div className="h-5 w-full bg-secondary/40 animate-pulse rounded-lg" />
-                  <div className="h-4 w-2/3 bg-secondary/40 animate-pulse rounded-lg" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 bg-destructive/5 rounded-[3rem] border border-destructive/10">
-            <div className="w-20 h-20 rounded-3xl bg-destructive/10 flex items-center justify-center">
-              <Zap className="w-10 h-10 text-destructive" />
-            </div>
-            <div className="space-y-2 px-4">
-              <h3 className="text-2xl font-bold">Vaya, algo ha salido mal</h3>
-              <p className="text-muted-foreground max-w-sm mx-auto text-lg">
-                No hemos podido cargar el catálogo. Por favor, inténtalo de nuevo más tarde.
-              </p>
-            </div>
-            <Button variant="outline" size="lg" className="rounded-xl px-8 border-destructive/20 hover:bg-destructive/10" onClick={() => window.location.reload()}>
-              Reintentar
-            </Button>
-          </div>
-        ) : allAnimes.length > 0 ? (
+        {allAnimes.length > 0 ? (
           <>
             <motion.div 
               initial="hidden"
@@ -437,6 +408,35 @@ export default function AnimeSearchPage() {
               )}
             </div>
           </>
+        ) : isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10 md:gap-x-6">
+            {Array.from({ length: 18 }).map((_, i) => (
+              <div key={i} className="space-y-4">
+                <div className="aspect-[2/3] rounded-3xl bg-secondary/40 animate-pulse relative overflow-hidden border border-border/50">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                </div>
+                <div className="space-y-2 px-1">
+                  <div className="h-5 w-full bg-secondary/40 animate-pulse rounded-lg" />
+                  <div className="h-4 w-2/3 bg-secondary/40 animate-pulse rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 bg-destructive/5 rounded-[3rem] border border-destructive/10">
+            <div className="w-20 h-20 rounded-3xl bg-destructive/10 flex items-center justify-center">
+              <Zap className="w-10 h-10 text-destructive" />
+            </div>
+            <div className="space-y-2 px-4">
+              <h3 className="text-2xl font-bold">Vaya, algo ha salido mal</h3>
+              <p className="text-muted-foreground max-w-sm mx-auto text-lg">
+                No hemos podido cargar el catálogo. Por favor, inténtalo de nuevo más tarde.
+              </p>
+            </div>
+            <Button variant="outline" size="lg" className="rounded-xl px-8 border-destructive/20 hover:bg-destructive/10" onClick={() => window.location.reload()}>
+              Reintentar
+            </Button>
+          </div>
         ) : (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}

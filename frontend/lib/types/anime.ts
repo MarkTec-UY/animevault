@@ -32,6 +32,7 @@ export interface Episode {
 
 export interface StaffMember {
   id: number
+  entryKey: string
   name: string
   role: string
   image: string

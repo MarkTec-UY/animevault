@@ -15,7 +15,7 @@ class Company extends Model
 
     public function anime(): BelongsToMany
     {
-        return $this->belongsToMany(Anime::class, 'anime_company', 'company_id', 'anime_id')
+        return $this->belongsToMany(Anime::class, 'schema_anime.anime_company', 'company_id', 'anime_id')
             ->withPivot('is_main');
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AnimeTrailer extends Model
 {
-    protected $table = 'anime_trailer';
+    protected $table = 'schema_anime.anime_trailer';
 
     protected $primaryKey = 'anime_id';
 

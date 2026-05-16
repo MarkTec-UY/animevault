@@ -2,12 +2,12 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { Search, Zap, Filter, X } from "lucide-react"
 import { useSearchAnime } from "@/hooks/use-search-anime"
 import { useSearchManga } from "@/hooks/use-search-manga"
 import { useAnimeFilterOptions } from "@/hooks/use-anime-filter-options"
+import { useMangaFilterOptions } from "@/hooks/use-manga-filter-options"
 import { Input } from "@/components/ui/input"
 import { getAnimeUrlFromIdAndTitle } from "@/lib/utils/anime-urls"
 import { getMangaUrlFromIdAndTitle } from "@/lib/utils/manga-urls"
@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { AnimeFilters } from "@/lib/api/search"
 
 /**
@@ -61,21 +61,28 @@ export function SearchAnime() {
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const { data: filterOptions } = useAnimeFilterOptions()
+  const { data: animeFilterOptions } = useAnimeFilterOptions()
+  const { data: mangaFilterOptions } = useMangaFilterOptions()
 
   const searchFilters = useMemo(() => ({
     search: query,
     ...activeFilters
   }), [query, activeFilters])
 
-  const { data: animeResults, isLoading: isAnimeLoading } = useSearchAnime(searchFilters, 5)
-  const { data: mangaResults, isLoading: isMangaLoading } = useSearchManga(searchFilters, 5)
+  const { data: animeResults, isLoading: isAnimeLoading, isError: isAnimeError } = useSearchAnime(searchFilters, 5)
+  const { data: mangaResults, isLoading: isMangaLoading, isError: isMangaError } = useSearchManga(searchFilters, 5)
 
   const isLoading = isAnimeLoading || isMangaLoading
+  const hasSearchError = isAnimeError || isMangaError
+  const filterOptions = searchType === "manga" ? mangaFilterOptions : animeFilterOptions
+  const animeResultCount = animeResults?.length ?? 0
+  const mangaResultCount = mangaResults?.length ?? 0
+  const hasAnyResults = animeResultCount > 0 || mangaResultCount > 0
 
   const activeFilterCount = useMemo(() => {
     return Object.values(activeFilters).filter(v => v !== undefined && v !== null && (Array.isArray(v) ? v.length > 0 : true)).length
   }, [activeFilters])
+  const shouldShowEmptyResults = !hasAnyResults && (query.length > 0 || activeFilterCount > 0)
 
   const handleSearch = useCallback((e?: React.FormEvent) => {
     e?.preventDefault()
@@ -299,6 +306,8 @@ export function SearchAnime() {
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto custom-scrollbar">
+              {hasAnyResults ? (
+                <>
               {/* Anime Results */}
               {animeResults && animeResults.length > 0 && (
                 <div>
@@ -313,12 +322,14 @@ export function SearchAnime() {
                           onClick={handleSelect}
                           className="flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors border-b border-border last:border-0"
                         >
-                          <Image
+                          <img
                             src={anime.poster}
                             alt={anime.title}
                             width={40}
                             height={56}
                             className="rounded object-cover bg-muted shrink-0"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">{anime.title}</p>
@@ -345,12 +356,14 @@ export function SearchAnime() {
                           onClick={handleSelect}
                           className="flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors border-b border-border last:border-0"
                         >
-                          <Image
+                          <img
                             src={manga.poster}
                             alt={manga.title}
                             width={40}
                             height={56}
                             className="rounded object-cover bg-muted shrink-0"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">{manga.title}</p>
@@ -362,13 +375,18 @@ export function SearchAnime() {
                   </ul>
                 </div>
               )}
-
-              {(!animeResults || animeResults.length === 0) && (!mangaResults || mangaResults.length === 0) && (query.length > 0 || activeFilterCount > 0) && (
+                </>
+              ) : hasSearchError ? (
+                <div className="flex items-center justify-center gap-2 px-4 py-8 text-destructive">
+                  <Zap className="w-4 h-4" />
+                  <span className="text-sm">No hemos podido completar la búsqueda ahora mismo</span>
+                </div>
+              ) : shouldShowEmptyResults ? (
                 <div className="flex items-center justify-center gap-2 px-4 py-8 text-muted-foreground">
                   <Zap className="w-4 h-4" />
                   <span className="text-sm">No se encontraron resultados</span>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
         </div>

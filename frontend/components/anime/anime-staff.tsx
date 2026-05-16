@@ -23,7 +23,7 @@ export function AnimeStaff({ staff }: AnimeStaffProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {staff.map((member) => (
           <div
-            key={member.id}
+            key={member.entryKey}
             className="group flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:border-primary/30 transition-all duration-200"
           >
             <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0 border border-border">

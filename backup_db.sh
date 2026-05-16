@@ -13,9 +13,9 @@ usage() {
   cat <<'EOF'
 Usage: ./backup_db.sh [options]
 
-Creates or restores a PostgreSQL backup using the Docker Compose "db" service.
+Creates or restores a PostgreSQL backup using the Docker Compose "pgsql" service.
 Default mode is backup, saved in ./db with a timestamped filename.
-Restore mode resets schema "public" before importing.
+Restore mode resets the application schemas before importing.
 
 Options:
   -r, --restore FILE Restore database from FILE (.sql, .gz, .gzip).
@@ -111,6 +111,20 @@ is_compressed_file() {
   esac
 }
 
+reset_application_schemas() {
+  docker compose exec -T "$SERVICE_NAME" sh -c '
+    PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'\''SQL'\''
+DROP SCHEMA IF EXISTS schema_characters CASCADE;
+DROP SCHEMA IF EXISTS schema_staff CASCADE;
+DROP SCHEMA IF EXISTS schema_manga CASCADE;
+DROP SCHEMA IF EXISTS schema_anime CASCADE;
+DROP SCHEMA IF EXISTS schema_user CASCADE;
+DROP SCHEMA IF EXISTS schema_core CASCADE;
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+SQL'
+}
+
 if [ "$MODE" = "restore" ]; then
   if [ -z "$INPUT_FILE" ]; then
     echo "You must provide a file with --restore."
@@ -137,8 +151,8 @@ if [ "$MODE" = "restore" ]; then
   fi
 
   echo "Restoring database from: $INPUT_FILE"
-  echo "Resetting schema public before restore..."
-  docker compose exec -T "$SERVICE_NAME" sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DROP SCHEMA IF EXISTS public CASCADE;" -c "CREATE SCHEMA public;"'
+  echo "Resetting application schemas before restore..."
+  reset_application_schemas
 
   echo "Importing backup..."
   docker compose exec -T "$SERVICE_NAME" sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < "$TMP_SQL"

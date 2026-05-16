@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 
 import type { MangaData } from "@/lib/types/manga"
@@ -18,12 +17,12 @@ export function MangaCard({ manga, className = "" }: MangaCardProps) {
     <Link href={getMangaUrl(manga)} className={className}>
       <div className="group">
         <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
-          <Image
+          <img
             src={manga.poster}
             alt={manga.title}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            loading="lazy"
+            referrerPolicy="no-referrer"
           />
         </div>
         <h3 className="mt-2 font-semibold text-sm line-clamp-2 group-hover:text-primary">
