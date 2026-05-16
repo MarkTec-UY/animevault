@@ -1,13 +1,17 @@
 <?php
 
 use App\Models\User;
+use App\Services\Anime\AnimeAiringNotificationService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function (): void {
+    config(['anime.cache.store' => 'array']);
     recreateUserAnimeNotificationApiTables();
+    Cache::store(config('anime.cache.store'))->flush();
 });
 
 it('lists authenticated user notifications with unread filtering and unread counts', function () {
@@ -116,6 +120,70 @@ it('marks a single notification and then all remaining notifications as read', f
     expect(DB::table('user_anime_notifications')->whereNull('read_at')->count())->toBe(0);
 });
 
+it('caches notification lists and invalidates them when read state changes', function () {
+    $user = User::factory()->create();
+    createNotificationApiAnimeRecord(100, 'Blue Box');
+
+    DB::table('user_anime_notifications')->insert([
+        'id' => 1,
+        'user_id' => $user->id,
+        'anime_id' => 100,
+        'type' => 'episode_aired',
+        'episode' => 18,
+        'title' => 'New episode aired',
+        'body' => 'Episode 18 of Blue Box aired.',
+        'read_at' => null,
+        'created_at' => now()->subMinute(),
+        'updated_at' => now()->subMinute(),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/me/notifications?unread_only=true')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('meta.unread_count', 1);
+
+    $this->postJson('/api/v1/me/notifications/1/read')
+        ->assertOk()
+        ->assertJsonPath('id', 1);
+
+    $this->getJson('/api/v1/me/notifications?unread_only=true')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 0)
+        ->assertJsonPath('meta.unread_count', 0)
+        ->assertJsonCount(0, 'data');
+});
+
+it('invalidates cached notification lists when new notifications are created', function () {
+    $user = User::factory()->create();
+    $anime = createNotificationApiAnimeRecord(100, 'Blue Box');
+
+    DB::table('user_anime_library')->insert([
+        'user_id' => $user->id,
+        'anime_id' => 100,
+        'status' => 'planning',
+        'progress_episodes' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/me/notifications?unread_only=true')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 0)
+        ->assertJsonPath('meta.unread_count', 0);
+
+    app(AnimeAiringNotificationService::class)->createEpisodeAiredNotifications($anime, [1]);
+
+    $this->getJson('/api/v1/me/notifications?unread_only=true')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('meta.unread_count', 1)
+        ->assertJsonPath('data.0.episode', 1);
+});
+
 it('does not allow reading another users notification', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
@@ -145,6 +213,7 @@ function recreateUserAnimeNotificationApiTables(): void
     Schema::disableForeignKeyConstraints();
 
     Schema::dropIfExists('user_anime_notifications');
+    Schema::dropIfExists('user_anime_library');
     Schema::dropIfExists('anime_title');
     Schema::dropIfExists('anime');
     Schema::dropIfExists('users');
@@ -203,10 +272,20 @@ function recreateUserAnimeNotificationApiTables(): void
         $table->unique(['user_id', 'anime_id', 'type', 'episode']);
     });
 
+    Schema::create('user_anime_library', function (Blueprint $table): void {
+        $table->id();
+        $table->unsignedBigInteger('user_id');
+        $table->integer('anime_id');
+        $table->string('status');
+        $table->integer('progress_episodes')->default(0);
+        $table->timestamp('created_at')->nullable();
+        $table->timestamp('updated_at')->nullable();
+    });
+
     Schema::enableForeignKeyConstraints();
 }
 
-function createNotificationApiAnimeRecord(int $id, string $title): void
+function createNotificationApiAnimeRecord(int $id, string $title): \App\Models\Anime
 {
     DB::table('anime')->insert([
         'id' => $id,
@@ -223,4 +302,9 @@ function createNotificationApiAnimeRecord(int $id, string $title): void
         'title_type' => 'english',
         'title' => $title,
     ]);
+
+    /** @var \App\Models\Anime $anime */
+    $anime = \App\Models\Anime::query()->findOrFail($id);
+
+    return $anime;
 }

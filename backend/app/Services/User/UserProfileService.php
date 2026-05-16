@@ -3,7 +3,9 @@
 namespace App\Services\User;
 
 use App\Models\User;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class UserProfileService
@@ -52,8 +54,10 @@ class UserProfileService
         ]);
 
         $user->save();
+        $user = $user->refresh();
+        $this->forgetCachedPayloads($user);
 
-        return $user->refresh();
+        return $user;
     }
 
     /**
@@ -61,15 +65,19 @@ class UserProfileService
      */
     public function authenticatedPayload(User $user): array
     {
-        return array_merge($this->basePayload($user), [
-            'email' => $user->email,
-            'role' => $user->resolvedRole()->value,
-            'created_at' => $user->created_at?->toAtomString(),
-            'permissions' => [
-                'can_manage_news' => $user->canManageNews(),
-                'can_access_editor_panel' => $user->canManageNews(),
-            ],
-        ]);
+        return $this->cacheStore()->remember(
+            $this->authenticatedPayloadCacheKey($user),
+            $this->cacheTtl('user_profile_authenticated'),
+            fn (): array => array_merge($this->basePayload($user), [
+                'email' => $user->email,
+                'role' => $user->resolvedRole()->value,
+                'created_at' => $user->created_at?->toAtomString(),
+                'permissions' => [
+                    'can_manage_news' => $user->canManageNews(),
+                    'can_access_editor_panel' => $user->canManageNews(),
+                ],
+            ]),
+        );
     }
 
     /**
@@ -77,7 +85,11 @@ class UserProfileService
      */
     public function publicPayload(User $user): array
     {
-        return $this->basePayload($user);
+        return $this->cacheStore()->remember(
+            $this->publicPayloadCacheKey($user),
+            $this->cacheTtl('user_profile_public'),
+            fn (): array => $this->basePayload($user),
+        );
     }
 
     /**
@@ -103,6 +115,33 @@ class UserProfileService
         if (filled($path)) {
             Storage::disk('public')->delete($path);
         }
+    }
+
+    private function cacheStore(): CacheRepository
+    {
+        return Cache::store(config('anime.cache.store', 'redis'));
+    }
+
+    private function cacheTtl(string $key): int
+    {
+        return (int) config("anime.cache.ttls.{$key}", 300);
+    }
+
+    private function forgetCachedPayloads(User $user): void
+    {
+        $cache = $this->cacheStore();
+        $cache->forget($this->publicPayloadCacheKey($user));
+        $cache->forget($this->authenticatedPayloadCacheKey($user));
+    }
+
+    private function publicPayloadCacheKey(User $user): string
+    {
+        return "user_profile:public:{$user->id}";
+    }
+
+    private function authenticatedPayloadCacheKey(User $user): string
+    {
+        return "user_profile:authenticated:{$user->id}";
     }
 
     private function avatarDirectory(User $user): string

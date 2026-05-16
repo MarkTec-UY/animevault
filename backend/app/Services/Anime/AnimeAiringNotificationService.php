@@ -6,11 +6,16 @@ use App\Enums\UserAnimeStatus;
 use App\Models\Anime;
 use App\Models\User;
 use App\Models\UserAnimeLibraryEntry;
+use App\Services\User\UserAnimeNotificationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 class AnimeAiringNotificationService
 {
+    public function __construct(
+        private UserAnimeNotificationService $notifications,
+    ) {}
+
     /**
      * @param  list<int>  $airedEpisodes
      */
@@ -27,6 +32,7 @@ class AnimeAiringNotificationService
             'native' => $anime->titleByType('native'),
         ];
         $timestamp = now();
+        $notifiedUserIds = [];
 
         foreach ($airedEpisodes as $episode) {
             $userIds = $this->candidateUserIdsForEpisode($anime, $episode);
@@ -56,7 +62,18 @@ class AnimeAiringNotificationService
                 ])
                 ->all();
 
-            DB::table('schema_user.user_anime_notifications')->insertOrIgnore($rows);
+            $inserted = DB::table('schema_user.user_anime_notifications')->insertOrIgnore($rows);
+
+            if ($inserted > 0) {
+                $notifiedUserIds = [
+                    ...$notifiedUserIds,
+                    ...collect($rows)->pluck('user_id')->all(),
+                ];
+            }
+        }
+
+        if ($notifiedUserIds !== []) {
+            $this->notifications->bumpVersionsForUsers($notifiedUserIds);
         }
     }
 

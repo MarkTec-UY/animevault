@@ -4,12 +4,15 @@ use App\Models\Anime;
 use App\Models\User;
 use App\Services\Anime\AnimeAiringNotificationService;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 beforeEach(function (): void {
+    config(['anime.cache.store' => 'array']);
     recreateAnimeAiringNotificationTables();
+    Cache::store(config('anime.cache.store'))->flush();
 });
 
 it('detects newly aired episodes from next airing state transitions', function () {

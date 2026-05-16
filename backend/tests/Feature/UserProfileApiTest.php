@@ -2,13 +2,16 @@
 
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function (): void {
+    config(['anime.cache.store' => 'array']);
     recreateUserProfileTables();
+    Cache::store(config('anime.cache.store'))->flush();
     Storage::fake('public');
 });
 
@@ -139,6 +142,37 @@ it('returns public profiles and hides private ones', function () {
         ->assertJson([
             'message' => 'User profile not found.',
         ]);
+});
+
+it('caches public profiles and invalidates them after profile updates', function () {
+    $user = User::factory()->create([
+        'username' => 'Jose',
+        'about_me' => 'Watching seasonal anime every week.',
+        'is_profile_public' => true,
+    ]);
+
+    $this->getJson('/api/v1/users/Jose')
+        ->assertOk()
+        ->assertJsonPath('user.about_me', 'Watching seasonal anime every week.');
+
+    $user->forceFill([
+        'about_me' => 'Changed directly in the database.',
+    ])->save();
+
+    $this->getJson('/api/v1/users/Jose')
+        ->assertOk()
+        ->assertJsonPath('user.about_me', 'Watching seasonal anime every week.');
+
+    $this->actingAs($user)
+        ->putJson('/api/v1/me/profile', [
+            'about_me' => 'Cache invalidated through the profile API.',
+        ])
+        ->assertOk()
+        ->assertJsonPath('user.about_me', 'Cache invalidated through the profile API.');
+
+    $this->getJson('/api/v1/users/Jose')
+        ->assertOk()
+        ->assertJsonPath('user.about_me', 'Cache invalidated through the profile API.');
 });
 
 it('returns profile preferences in auth me responses', function () {

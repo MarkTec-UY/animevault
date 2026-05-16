@@ -40,7 +40,7 @@ class MediaSectionService
     {
         return $this->cacheStore()->remember(
             $this->sectionCacheKey('anime', $animeId, 'relations', $user),
-            $this->cacheTtl('detail'),
+            $this->cacheTtl('sections'),
             function () use ($animeId, $user): array {
                 return AnimeRelation::query()
                     ->where('anime_id', $animeId)
@@ -70,7 +70,7 @@ class MediaSectionService
     {
         return $this->cacheStore()->remember(
             $this->sectionCacheKey('manga', $mangaId, 'relations', $user),
-            $this->cacheTtl('detail'),
+            $this->cacheTtl('sections'),
             function () use ($mangaId, $user): array {
                 return MangaRelation::query()
                     ->where('manga_id', $mangaId)
@@ -132,7 +132,7 @@ class MediaSectionService
     {
         return $this->cacheStore()->remember(
             $this->sectionCacheKey($mediaType, $mediaId, 'characters'),
-            $this->cacheTtl('detail'),
+            $this->cacheTtl('sections'),
             function () use ($mediaId): array {
                 $voiceActorEntriesByCharacterId = MediaCharacterVoiceActor::query()
                     ->where('media_id', $mediaId)
@@ -214,7 +214,7 @@ class MediaSectionService
     {
         return $this->cacheStore()->remember(
             $this->sectionCacheKey($mediaType, $mediaId, 'staff'),
-            $this->cacheTtl('detail'),
+            $this->cacheTtl('sections'),
             function () use ($mediaId): array {
                 return MediaStaff::query()
                     ->where('media_id', $mediaId)
