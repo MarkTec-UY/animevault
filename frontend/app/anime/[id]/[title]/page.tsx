@@ -21,16 +21,23 @@ interface PageProps {
  * Fetch anime data from API (with Redis cache on backend)
  */
 async function getAnime(id: string): Promise<AnimeData | null> {
+  return getAnimeWithOptions(id)
+}
+
+async function getAnimeWithOptions(
+  id: string,
+  options?: { includeExtras?: boolean },
+): Promise<AnimeData | null> {
   const animeId = parseInt(id, 10)
   if (isNaN(animeId)) {
     return null
   }
-  return await fetchAnimeById(animeId)
+  return await fetchAnimeById(animeId, options)
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
-  const anime = await getAnime(id)
+  const anime = await getAnimeWithOptions(id, { includeExtras: false })
 
   if (!anime) {
     return { title: "Not Found — AnimeVault" }

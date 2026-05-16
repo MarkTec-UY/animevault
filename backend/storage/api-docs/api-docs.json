@@ -32,7 +32,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Registers a new user and returns a Sanctum token",
+                "summary": "Registers a new user and authenticates via session",
                 "operationId": "apiAuthRegister",
                 "requestBody": {
                     "required": true,
@@ -40,15 +40,15 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "name",
+                                    "username",
                                     "email",
                                     "password",
                                     "password_confirmation"
                                 ],
                                 "properties": {
-                                    "name": {
+                                    "username": {
                                         "type": "string",
-                                        "example": "Jose"
+                                        "example": "JoseVCF"
                                     },
                                     "email": {
                                         "type": "string",
@@ -84,9 +84,9 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
-                                                "name": {
+                                                "username": {
                                                     "type": "string",
-                                                    "example": "Jose"
+                                                    "example": "JoseVCF"
                                                 },
                                                 "email": {
                                                     "type": "string",
@@ -95,14 +95,6 @@
                                                 }
                                             },
                                             "type": "object"
-                                        },
-                                        "token": {
-                                            "type": "string",
-                                            "example": "1|sanctum-token-example"
-                                        },
-                                        "token_type": {
-                                            "type": "string",
-                                            "example": "Bearer"
                                         }
                                     },
                                     "type": "object"
@@ -118,7 +110,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Authenticates a user and returns a Sanctum token",
+                "summary": "Authenticates a user via session",
                 "operationId": "apiAuthLogin",
                 "requestBody": {
                     "required": true,
@@ -159,9 +151,9 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
-                                                "name": {
+                                                "username": {
                                                     "type": "string",
-                                                    "example": "Jose"
+                                                    "example": "JoseVCF"
                                                 },
                                                 "email": {
                                                     "type": "string",
@@ -170,14 +162,6 @@
                                                 }
                                             },
                                             "type": "object"
-                                        },
-                                        "token": {
-                                            "type": "string",
-                                            "example": "1|sanctum-token-example"
-                                        },
-                                        "token_type": {
-                                            "type": "string",
-                                            "example": "Bearer"
                                         }
                                     },
                                     "type": "object"
@@ -194,6 +178,22 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The provided credentials are incorrect."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many login attempts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Too many login attempts. Please try again later."
                                         }
                                     },
                                     "type": "object"
@@ -231,11 +231,11 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Revokes the current Sanctum token",
+                "summary": "Logs out the authenticated user",
                 "operationId": "apiAuthLogout",
                 "responses": {
                     "200": {
-                        "description": "Token revoked"
+                        "description": "Logged out"
                     },
                     "401": {
                         "description": "Unauthenticated"
@@ -470,6 +470,184 @@
                 }
             }
         },
+        "/api/v1/manga": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "Lists manga with pagination, filters and sorting",
+                "operationId": "apiMangaIndex",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Searches by manga ID or title (romaji, english, native)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        },
+                        "example": "one piece"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filters by one or more status codes. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "FINISHED",
+                            "RELEASING"
+                        ]
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "description": "Filters by one or more format codes. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "MANGA",
+                            "ONE_SHOT"
+                        ]
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "Filters by one or more source codes. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "ORIGINAL"
+                        ]
+                    },
+                    {
+                        "name": "genres",
+                        "in": "query",
+                        "description": "Filters by one or more genres. Use comma-separated values.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            "Action",
+                            "Adventure"
+                        ]
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "Filters by start year",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2100,
+                            "minimum": 1900
+                        },
+                        "example": 1997
+                    },
+                    {
+                        "name": "is_adult",
+                        "in": "query",
+                        "description": "Filters adult content",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "example": false
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order for the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "popularity_desc",
+                            "enum": [
+                                "popularity_desc",
+                                "score_desc",
+                                "favourites_desc",
+                                "recently_updated",
+                                "start_date_desc",
+                                "title_asc"
+                            ]
+                        },
+                        "example": "popularity_desc"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 50,
+                            "minimum": 1
+                        },
+                        "example": 15
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated manga list"
+                    }
+                }
+            }
+        },
+        "/api/v1/manga/filters": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "Gets available filters for the manga catalog",
+                "operationId": "apiMangaFilters",
+                "responses": {
+                    "200": {
+                        "description": "Manga filters"
+                    }
+                }
+            }
+        },
         "/api/v1/ping": {
             "get": {
                 "tags": [
@@ -578,6 +756,35 @@
                 }
             }
         },
+        "/api/v1/manga/{id}": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "Gets a single manga with its related metadata",
+                "operationId": "apiMangaShow",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Manga identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Manga found"
+                    },
+                    "404": {
+                        "description": "Manga not found"
+                    }
+                }
+            }
+        },
         "/api/v1/me/favorites": {
             "get": {
                 "tags": [
@@ -611,12 +818,12 @@
                     {
                         "name": "user",
                         "in": "path",
-                        "description": "User identifier",
+                        "description": "User username",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         },
-                        "example": 3
+                        "example": "JoseVCF"
                     },
                     {
                         "name": "per_page",
@@ -762,12 +969,12 @@
                     {
                         "name": "user",
                         "in": "path",
-                        "description": "User identifier",
+                        "description": "User username",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         },
-                        "example": 3
+                        "example": "JoseVCF"
                     },
                     {
                         "name": "status",
@@ -1154,12 +1361,12 @@
                     {
                         "name": "user",
                         "in": "path",
-                        "description": "User identifier",
+                        "description": "User username",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         },
-                        "example": 3
+                        "example": "JoseVCF"
                     }
                 ],
                 "responses": {
@@ -1199,6 +1406,10 @@
         {
             "name": "Home",
             "description": "Public home page feed endpoints"
+        },
+        {
+            "name": "Manga",
+            "description": "Manga catalog endpoints"
         },
         {
             "name": "System",

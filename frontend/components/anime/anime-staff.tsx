@@ -1,18 +1,29 @@
 import Image from "next/image"
-import type { AnimeData } from "@/lib/types/anime"
+import type { StaffMember } from "@/lib/types/anime"
 
 interface AnimeStaffProps {
-  staff: AnimeData["staff"]
+  staff: StaffMember[]
 }
 
 export function AnimeStaff({ staff }: AnimeStaffProps) {
+  if (staff.length === 0) {
+    return (
+      <section className="space-y-4">
+        <h2 className="font-serif text-2xl text-foreground">Staff</h2>
+        <div className="rounded-2xl border border-dashed border-border/70 bg-card/40 px-6 py-12 text-center text-sm text-muted-foreground">
+          Staff information is not available yet for this title.
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="space-y-4">
       <h2 className="font-serif text-2xl text-foreground">Staff</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {staff.map((member) => (
           <div
-            key={member.name}
+            key={member.id}
             className="group flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:border-primary/30 transition-all duration-200"
           >
             <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0 border border-border">

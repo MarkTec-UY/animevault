@@ -1,12 +1,25 @@
 import Image from "next/image"
-import type { AnimeData } from "@/lib/types/anime"
+import type { Character } from "@/lib/types/anime"
 import { Badge } from "@/components/ui/badge"
 
 interface AnimeCharactersProps {
-  characters: AnimeData["characters"]
+  characters: Character[]
 }
 
 export function AnimeCharacters({ characters }: AnimeCharactersProps) {
+  if (characters.length === 0) {
+    return (
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-2xl text-foreground">Characters</h2>
+        </div>
+        <div className="rounded-2xl border border-dashed border-border/70 bg-card/40 px-6 py-12 text-center text-sm text-muted-foreground">
+          Character information is not available yet for this title.
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
@@ -30,7 +43,7 @@ export function AnimeCharacters({ characters }: AnimeCharactersProps) {
                 <Badge
                   variant="secondary"
                   className={
-                    char.role === "Main"
+                    char.role.toLowerCase().includes("main")
                       ? "bg-primary/20 text-primary border-primary/30 text-xs"
                       : "bg-secondary text-muted-foreground border-border text-xs"
                   }
@@ -41,7 +54,9 @@ export function AnimeCharacters({ characters }: AnimeCharactersProps) {
             </div>
             <div className="p-3 space-y-0.5">
               <p className="text-sm font-medium text-foreground truncate">{char.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{char.voiceActor}</p>
+              {char.voiceActor ? (
+                <p className="text-xs text-muted-foreground truncate">{char.voiceActor}</p>
+              ) : null}
             </div>
           </div>
         ))}

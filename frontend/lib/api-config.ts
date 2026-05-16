@@ -17,7 +17,18 @@ export const API_CONFIG = {
     anime: {
       list: '/api/v1/anime',
       show: (id: number | string) => `/api/v1/anime/${id}`,
+      relations: (id: number | string) => `/api/v1/anime/${id}/relations`,
+      characters: (id: number | string) => `/api/v1/anime/${id}/characters`,
+      staff: (id: number | string) => `/api/v1/anime/${id}/staff`,
       filters: '/api/v1/anime/filters',
+    },
+    manga: {
+      list: '/api/v1/manga',
+      show: (id: number | string) => `/api/v1/manga/${id}`,
+      relations: (id: number | string) => `/api/v1/manga/${id}/relations`,
+      characters: (id: number | string) => `/api/v1/manga/${id}/characters`,
+      staff: (id: number | string) => `/api/v1/manga/${id}/staff`,
+      filters: '/api/v1/manga/filters',
     },
     home: '/api/v1/home',
     auth: {

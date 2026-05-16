@@ -17,7 +17,7 @@ export default async function AnimeIdPage({ params }: PageProps) {
   const { id } = await params
 
   // Fetch anime by ID
-  const anime = await fetchAnimeById(id)
+  const anime = await fetchAnimeById(id, { includeExtras: false })
 
   if (!anime) {
     // Display friendly error page instead of generic 404

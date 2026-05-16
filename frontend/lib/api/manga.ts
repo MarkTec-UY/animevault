@@ -1,8 +1,9 @@
 import { API_CONFIG } from "@/lib/api-config"
 import { apiFetch } from "@/lib/api/client"
-import type { AnimeData, Character, RelatedAnime, StaffMember } from "@/lib/types/anime"
+import type { MangaData, RelatedMedia } from "@/lib/types/manga"
+import type { Character, StaffMember } from "@/lib/types/anime"
 
-export interface AnimeApiResponse {
+export interface MangaApiResponse {
   id: number
   preferred_title?: string
   titles?: {
@@ -11,56 +12,31 @@ export interface AnimeApiResponse {
     native?: string
   }
   description?: string
-  synopsis?: string
-  next_airing_at?: string | null
-  next_airing_episode?: number | null
   cover_image?: {
     color?: string
     large?: string
   }
-  cover?: {
-    image?: {
-      large?: string
-    }
-  }
   banner_image?: string
-  bannerImage?: string
   format?: {
     code?: string
     description?: string
   } | string
-  episodes?: number
-  duration_minutes?: number
-  duration?: number
+  chapters?: number
+  volumes?: number
   status?: {
     code?: string
     description?: string
   } | string
   start_date?: string
-  startDate?: {
-    year?: number
-    month?: number
-    day?: number
-  }
   end_date?: string
-  endDate?: {
-    year?: number
-    month?: number
-    day?: number
-  }
-  season?: {
-    code?: string
-    description?: string
-  } | string
-  season_year?: number
-  seasonYear?: number
   source?: {
     code?: string
     description?: string
   } | string
   average_score?: number
-  meanScore?: number
   popularity?: number
+  favourites?: number
+  is_adult?: boolean
   genres?: string[]
   tags?: Array<{
     id?: number
@@ -69,19 +45,6 @@ export interface AnimeApiResponse {
     category?: string
     rank?: number
   }>
-  main_studio?: {
-    id?: number
-    name?: string
-  }
-  studios?: {
-    edges?: Array<{
-      node?: {
-        name?: string
-      }
-    }>
-  }
-  is_favourite?: boolean
-  isFavourite?: boolean
   [key: string]: unknown
 }
 
@@ -94,7 +57,7 @@ interface MediaReferenceApi {
   description?: string | null
 }
 
-interface AnimeRelationApiItem {
+interface MangaRelationApiItem {
   id: number
   preferred_title?: string | null
   titles?: {
@@ -111,7 +74,7 @@ interface AnimeRelationApiItem {
   }
 }
 
-interface AnimeCharacterApiItem {
+interface MangaCharacterApiItem {
   id: number
   preferred_name?: string | null
   role?: MediaReferenceApi | null
@@ -132,7 +95,7 @@ interface AnimeCharacterApiItem {
   }>
 }
 
-interface AnimeStaffApiItem {
+interface MangaStaffApiItem {
   id: number
   preferred_name?: string | null
   role_name?: string | null
@@ -143,54 +106,39 @@ interface AnimeStaffApiItem {
   primary_occupations?: string[]
 }
 
-interface FetchAnimeOptions {
+interface FetchMangaOptions {
   includeExtras?: boolean
 }
 
-interface AnimeExtraSections {
-  relations: AnimeRelationApiItem[]
-  characters: AnimeCharacterApiItem[]
-  staff: AnimeStaffApiItem[]
+interface MangaExtraSections {
+  relations: MangaRelationApiItem[]
+  characters: MangaCharacterApiItem[]
+  staff: MangaStaffApiItem[]
 }
 
-/**
- * Fetch a single anime by ID from the backend API.
- */
-export async function fetchAnimeById(
+export async function fetchMangaById(
   id: number | string,
-  options: FetchAnimeOptions = {},
-): Promise<AnimeData | null> {
+  options: FetchMangaOptions = {},
+): Promise<MangaData | null> {
   try {
-    const endpoint = API_CONFIG.endpoints.anime.show(id)
-    const data = await fetchApi<AnimeApiResponse>(endpoint)
+    const endpoint = API_CONFIG.endpoints.manga.show(id)
+    const data = await fetchApi<MangaApiResponse>(endpoint)
     const extras =
       options.includeExtras === false
-        ? emptyAnimeExtras()
-        : await fetchAnimeExtras(id)
+        ? emptyMangaExtras()
+        : await fetchMangaExtras(id)
 
-    return transformApiResponseToAnimeData(data, extras)
+    return transformApiResponseToMangaData(data, extras)
   } catch (error) {
-    console.error(`Failed to fetch anime ${id}:`, error)
+    console.error(`Failed to fetch manga ${id}:`, error)
     return null
   }
 }
 
-/**
- * Fetch anime by slug.
- */
-export async function fetchAnimeBySlug(slug: string): Promise<AnimeData | null> {
-  const maybeId = parseInt(slug, 10)
-  if (!isNaN(maybeId)) {
-    return fetchAnimeById(maybeId)
-  }
-
-  return null
-}
-
-export function transformApiResponseToAnimeData(
-  apiData: AnimeApiResponse,
-  extras: AnimeExtraSections = emptyAnimeExtras(),
-): AnimeData {
+export function transformApiResponseToMangaData(
+  apiData: MangaApiResponse,
+  extras: MangaExtraSections = emptyMangaExtras(),
+): MangaData {
   const title =
     apiData.preferred_title ||
     apiData.titles?.romaji ||
@@ -198,15 +146,8 @@ export function transformApiResponseToAnimeData(
     "Unknown"
   const jaTitle = apiData.titles?.native || ""
 
-  const poster =
-    apiData.cover_image?.large ||
-    apiData.cover?.image?.large ||
-    "/images/anime-1.jpg"
-
-  const banner =
-    apiData.banner_image ||
-    apiData.bannerImage ||
-    "/images/anime-banner.jpg"
+  const poster = apiData.cover_image?.large || "/images/anime-1.jpg"
+  const banner = apiData.banner_image || "/images/anime-banner.jpg"
 
   const format =
     typeof apiData.format === "string"
@@ -218,89 +159,61 @@ export function transformApiResponseToAnimeData(
       ? apiData.status
       : apiData.status?.code || "Unknown"
 
-  const season =
-    typeof apiData.season === "string"
-      ? apiData.season
-      : apiData.season?.code || ""
-
   const source =
     typeof apiData.source === "string"
       ? apiData.source
       : apiData.source?.code || "Unknown"
 
-  let score = apiData.average_score || apiData.meanScore || 0
+  let score = apiData.average_score || 0
   if (score > 10) {
     score = score / 10
   }
 
-  const duration = apiData.duration_minutes
-    ? `${apiData.duration_minutes} min/ep`
-    : apiData.duration
-      ? `${apiData.duration} min/ep`
-      : "Unknown"
-
-  let year = apiData.season_year || apiData.seasonYear
-  if (!year && apiData.start_date) {
+  let year = new Date().getFullYear()
+  if (apiData.start_date) {
     year = new Date(apiData.start_date).getFullYear()
   }
-  if (!year && apiData.startDate?.year) {
-    year = apiData.startDate.year
-  }
-  if (!year) {
-    year = new Date().getFullYear()
-  }
-
-  const studio =
-    apiData.main_studio?.name ||
-    apiData.studios?.edges?.[0]?.node?.name ||
-    "Unknown"
 
   return {
     id: apiData.id,
-    slug: `anime-${apiData.id}`,
+    slug: `manga-${apiData.id}`,
     title,
     jaTitle,
     banner,
     poster,
-    synopsis: apiData.description || apiData.synopsis || "",
+    synopsis: apiData.description || "",
     score,
     rank: 0,
     popularity: apiData.popularity || 0,
     members: formatMembers(apiData.popularity || 0),
     type: format,
-    episodes: apiData.episodes || 0,
-    duration,
-    season,
+    chapters: apiData.chapters || 0,
+    volumes: apiData.volumes || 0,
     year,
     status,
-    studio,
     source,
-    rating: "PG-13",
-    isAiring: status === "RELEASING" || status === "AIRING",
+    is_adult: !!apiData.is_adult,
     genres: apiData.genres || [],
-    nextAiringAt: apiData.next_airing_at || null,
-    nextAiringEpisode: apiData.next_airing_episode || null,
     themes: (apiData.tags || []).map((tag) => tag.name || "").filter(Boolean),
-    characters: extras.characters.map(transformAnimeCharacter),
-    episodes_list: [],
-    staff: extras.staff.map(transformAnimeStaff),
+    characters: extras.characters.map(transformMangaCharacter),
+    staff: extras.staff.map(transformMangaStaff),
     reviews: [],
-    related: extras.relations.map(transformAnimeRelation),
+    related: extras.relations.map(transformMangaRelation),
     scoreBreakdown: [],
   }
 }
 
-async function fetchAnimeExtras(id: number | string): Promise<AnimeExtraSections> {
+async function fetchMangaExtras(id: number | string): Promise<MangaExtraSections> {
   const [relationsResult, charactersResult, staffResult] = await Promise.allSettled([
-    fetchApi<MediaApiResponse<AnimeRelationApiItem>>(API_CONFIG.endpoints.anime.relations(id)),
-    fetchApi<MediaApiResponse<AnimeCharacterApiItem>>(API_CONFIG.endpoints.anime.characters(id)),
-    fetchApi<MediaApiResponse<AnimeStaffApiItem>>(API_CONFIG.endpoints.anime.staff(id)),
+    fetchApi<MediaApiResponse<MangaRelationApiItem>>(API_CONFIG.endpoints.manga.relations(id)),
+    fetchApi<MediaApiResponse<MangaCharacterApiItem>>(API_CONFIG.endpoints.manga.characters(id)),
+    fetchApi<MediaApiResponse<MangaStaffApiItem>>(API_CONFIG.endpoints.manga.staff(id)),
   ])
 
   return {
-    relations: unwrapSection(relationsResult, "anime relations"),
-    characters: unwrapSection(charactersResult, "anime characters"),
-    staff: unwrapSection(staffResult, "anime staff"),
+    relations: unwrapSection(relationsResult, "manga relations"),
+    characters: unwrapSection(charactersResult, "manga characters"),
+    staff: unwrapSection(staffResult, "manga staff"),
   }
 }
 
@@ -320,7 +233,7 @@ function unwrapSection<T>(
   return []
 }
 
-function transformAnimeRelation(item: AnimeRelationApiItem): RelatedAnime {
+function transformMangaRelation(item: MangaRelationApiItem): RelatedMedia {
   let score = item.average_score ?? null
   if (score !== null && score > 10) {
     score = score / 10
@@ -338,11 +251,11 @@ function transformAnimeRelation(item: AnimeRelationApiItem): RelatedAnime {
     type: item.format?.description || item.format?.code || "Unknown",
     relation: item.relation?.description || item.relation?.code || "Related",
     score,
-    mediaType: item.type?.code === "MANGA" ? "MANGA" : "ANIME",
+    mediaType: item.type?.code === "ANIME" ? "ANIME" : "MANGA",
   }
 }
 
-function transformAnimeCharacter(item: AnimeCharacterApiItem): Character {
+function transformMangaCharacter(item: MangaCharacterApiItem): Character {
   const voiceActors = (item.voice_actors || []).map((voiceActor) => ({
     id: voiceActor.id,
     name: voiceActor.preferred_name || `Staff #${voiceActor.id}`,
@@ -365,7 +278,7 @@ function transformAnimeCharacter(item: AnimeCharacterApiItem): Character {
   }
 }
 
-function transformAnimeStaff(item: AnimeStaffApiItem): StaffMember {
+function transformMangaStaff(item: MangaStaffApiItem): StaffMember {
   return {
     id: item.id,
     name: item.preferred_name || `Staff #${item.id}`,
@@ -375,7 +288,7 @@ function transformAnimeStaff(item: AnimeStaffApiItem): StaffMember {
   }
 }
 
-function emptyAnimeExtras(): AnimeExtraSections {
+function emptyMangaExtras(): MangaExtraSections {
   return {
     relations: [],
     characters: [],

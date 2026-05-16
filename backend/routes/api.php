@@ -1,12 +1,21 @@
 <?php
 
 use App\Http\Controllers\Api\AnimeFiltersController;
+use App\Http\Controllers\Api\Anime\ListAnimeCharactersController;
+use App\Http\Controllers\Api\Anime\ListAnimeRelationsController;
+use App\Http\Controllers\Api\Anime\ListAnimeStaffController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EditorSessionController;
 use App\Http\Controllers\Api\HomePageController;
 use App\Http\Controllers\Api\ListAnimeController;
+use App\Http\Controllers\Api\ListMangaController;
+use App\Http\Controllers\Api\Manga\ListMangaCharactersController;
+use App\Http\Controllers\Api\Manga\ListMangaRelationsController;
+use App\Http\Controllers\Api\Manga\ListMangaStaffController;
+use App\Http\Controllers\Api\MangaFiltersController;
 use App\Http\Controllers\Api\PingController;
 use App\Http\Controllers\Api\ShowAnimeController;
+use App\Http\Controllers\Api\ShowMangaController;
 use App\Http\Controllers\Api\UserAnimeFavoriteController;
 use App\Http\Controllers\Api\UserAnimeLibraryController;
 use App\Http\Controllers\Api\UserAnimeNotificationController;
@@ -72,9 +81,37 @@ Route::prefix('v1')->group(function (): void {
     });
     Route::get('/home', HomePageController::class)->name('api.home');
     Route::get('/ping', PingController::class)->name('api.ping');
-    Route::get('/anime', ListAnimeController::class)->name('api.anime.index');
-    Route::get('/anime/filters', AnimeFiltersController::class)->name('api.anime.filters');
-    Route::get('/anime/{id}', ShowAnimeController::class)
-        ->whereNumber('id')
-        ->name('api.anime.show');
+    Route::prefix('anime')->group(function (): void {
+        Route::get('/', ListAnimeController::class)->name('api.anime.index');
+        Route::get('/filters', AnimeFiltersController::class)->name('api.anime.filters');
+        Route::get('/{id}/relations', ListAnimeRelationsController::class)
+            ->whereNumber('id')
+            ->name('api.anime.relations');
+        Route::get('/{id}/characters', ListAnimeCharactersController::class)
+            ->whereNumber('id')
+            ->name('api.anime.characters');
+        Route::get('/{id}/staff', ListAnimeStaffController::class)
+            ->whereNumber('id')
+            ->name('api.anime.staff');
+        Route::get('/{id}', ShowAnimeController::class)
+            ->whereNumber('id')
+            ->name('api.anime.show');
+    });
+
+    Route::prefix('manga')->group(function (): void {
+        Route::get('/', ListMangaController::class)->name('api.manga.index');
+        Route::get('/filters', MangaFiltersController::class)->name('api.manga.filters');
+        Route::get('/{id}/relations', ListMangaRelationsController::class)
+            ->whereNumber('id')
+            ->name('api.manga.relations');
+        Route::get('/{id}/characters', ListMangaCharactersController::class)
+            ->whereNumber('id')
+            ->name('api.manga.characters');
+        Route::get('/{id}/staff', ListMangaStaffController::class)
+            ->whereNumber('id')
+            ->name('api.manga.staff');
+        Route::get('/{id}', ShowMangaController::class)
+            ->whereNumber('id')
+            ->name('api.manga.show');
+    });
 });

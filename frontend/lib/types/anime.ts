@@ -6,9 +6,17 @@
 export interface Character {
   id: number
   name: string
-  role: "Main" | "Supporting"
+  role: string
   image: string
   voiceActor: string
+  voiceActors?: Array<{
+    id: number
+    name: string
+    image: string
+    language: string | null
+    roleNotes: string | null
+    dubGroup: string | null
+  }>
 }
 
 export interface Episode {
@@ -23,9 +31,11 @@ export interface Episode {
 }
 
 export interface StaffMember {
+  id: number
   name: string
   role: string
   image: string
+  occupations?: string[]
 }
 
 export interface Review {
@@ -44,7 +54,8 @@ export interface RelatedAnime {
   poster: string
   type: string
   relation: string
-  score: number
+  score: number | null
+  mediaType: "ANIME" | "MANGA"
 }
 
 export interface AnimeData {

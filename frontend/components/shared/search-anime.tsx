@@ -6,18 +6,21 @@ import Image from "next/image"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { Search, Zap, Filter, X } from "lucide-react"
 import { useSearchAnime } from "@/hooks/use-search-anime"
+import { useSearchManga } from "@/hooks/use-search-manga"
 import { useAnimeFilterOptions } from "@/hooks/use-anime-filter-options"
 import { Input } from "@/components/ui/input"
 import { getAnimeUrlFromIdAndTitle } from "@/lib/utils/anime-urls"
+import { getMangaUrlFromIdAndTitle } from "@/lib/utils/manga-urls"
 import { SearchAnimeSkeleton } from "@/components/shared/search-anime-skeleton"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import type { AnimeFilters } from "@/lib/api/search"
 
 /**
- * Search combo component for anime
+ * Search combo component for anime and manga
  * Provides autocomplete search with results dropdown and dynamic filters
  */
 export function SearchAnime() {
@@ -29,17 +32,19 @@ export function SearchAnime() {
   const [isOpen, setIsOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState<Omit<AnimeFilters, "search">>({})
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [searchType, setSearchType] = useState<"anime" | "manga">("anime")
   
   // Track previous params to sync state without useEffect
   const [prevParams, setPrevParams] = useState(() => searchParams.toString())
   const currentParamsString = searchParams.toString()
 
   // Sync state during render if URL changed and we are on the search page
-  if (pathname === "/anime" && currentParamsString !== prevParams) {
+  if ((pathname === "/anime" || pathname === "/manga") && currentParamsString !== prevParams) {
     setPrevParams(currentParamsString)
     
     const q = searchParams.get("search") || ""
     setQuery(q)
+    setSearchType(pathname.startsWith("/manga") ? "manga" : "anime")
     
     const filters: Omit<AnimeFilters, "search"> = {}
     const statusParam = searchParams.get("status")
@@ -63,7 +68,10 @@ export function SearchAnime() {
     ...activeFilters
   }), [query, activeFilters])
 
-  const { data: results, isLoading } = useSearchAnime(searchFilters, 8)
+  const { data: animeResults, isLoading: isAnimeLoading } = useSearchAnime(searchFilters, 5)
+  const { data: mangaResults, isLoading: isMangaLoading } = useSearchManga(searchFilters, 5)
+
+  const isLoading = isAnimeLoading || isMangaLoading
 
   const activeFilterCount = useMemo(() => {
     return Object.values(activeFilters).filter(v => v !== undefined && v !== null && (Array.isArray(v) ? v.length > 0 : true)).length
@@ -83,8 +91,8 @@ export function SearchAnime() {
     })
 
     setIsOpen(false)
-    router.push(`/anime?${params.toString()}`)
-  }, [query, activeFilters, activeFilterCount, router])
+    router.push(`/${searchType}?${params.toString()}`)
+  }, [query, activeFilters, activeFilterCount, router, searchType])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -106,8 +114,8 @@ export function SearchAnime() {
   const handleClear = useCallback(() => {
     setQuery("")
     setActiveFilters({})
-    if (pathname === "/anime") {
-      router.push("/anime")
+    if (pathname === "/anime" || pathname === "/manga") {
+      router.push(pathname)
     }
     inputRef.current?.focus()
   }, [pathname, router])
@@ -138,7 +146,7 @@ export function SearchAnime() {
           <Search className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             ref={inputRef}
-            placeholder="Buscar anime..."
+            placeholder={`Buscar ${searchType === "anime" ? "anime" : "manga"}...`}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
@@ -151,7 +159,7 @@ export function SearchAnime() {
               }
             }}
             className="pl-9 pr-9 bg-secondary border-border text-sm"
-            aria-label="Buscar anime"
+            aria-label="Buscar"
             autoComplete="off"
           />
           {query && (
@@ -185,9 +193,15 @@ export function SearchAnime() {
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0" align="end">
             <div className="p-4 border-b border-border">
+              <Tabs value={searchType} onValueChange={(v) => setSearchType(v as "anime" | "manga")} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="anime">Anime</TabsTrigger>
+                  <TabsTrigger value="manga">Manga</TabsTrigger>
+                </TabsList>
+              </Tabs>
               <h4 className="font-medium leading-none">Filtros</h4>
               <p className="text-xs text-muted-foreground mt-1">
-                Refina tu búsqueda de anime
+                Refina tu búsqueda de {searchType}
               </p>
             </div>
             <ScrollArea className="h-[400px] custom-scrollbar">
@@ -283,54 +297,80 @@ export function SearchAnime() {
             <div className="max-h-96 overflow-y-auto custom-scrollbar">
               <SearchAnimeSkeleton />
             </div>
-          ) : results && results.length > 0 ? (
-            <ul className="max-h-96 overflow-y-auto custom-scrollbar">
-              {results.map((anime) => {
-                const title = anime.title
-                const poster = anime.poster
-                const year = anime.year
+          ) : (
+            <div className="max-h-96 overflow-y-auto custom-scrollbar">
+              {/* Anime Results */}
+              {animeResults && animeResults.length > 0 && (
+                <div>
+                  <div className="bg-muted/50 px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
+                    Anime
+                  </div>
+                  <ul>
+                    {animeResults.map((anime) => (
+                      <li key={anime.id}>
+                        <Link
+                          href={getAnimeUrlFromIdAndTitle(anime.id, anime.title)}
+                          onClick={handleSelect}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors border-b border-border last:border-0"
+                        >
+                          <Image
+                            src={anime.poster}
+                            alt={anime.title}
+                            width={40}
+                            height={56}
+                            className="rounded object-cover bg-muted shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{anime.title}</p>
+                            <p className="text-xs text-muted-foreground">{anime.year} • {anime.type}</p>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-                return (
-                  <li key={anime.id}>
-                    <Link
-                      href={getAnimeUrlFromIdAndTitle(anime.id, title)}
-                      onClick={handleSelect}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors border-b border-border last:border-0"
-                    >
-                      {/* Poster */}
-                      <Image
-                        src={poster}
-                        alt={title}
-                        width={48}
-                        height={64}
-                        className="rounded object-cover bg-muted shrink-0"
-                      />
+              {/* Manga Results */}
+              {mangaResults && mangaResults.length > 0 && (
+                <div>
+                  <div className="bg-muted/50 px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
+                    Manga
+                  </div>
+                  <ul>
+                    {mangaResults.map((manga) => (
+                      <li key={manga.id}>
+                        <Link
+                          href={getMangaUrlFromIdAndTitle(manga.id, manga.title)}
+                          onClick={handleSelect}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors border-b border-border last:border-0"
+                        >
+                          <Image
+                            src={manga.poster}
+                            alt={manga.title}
+                            width={40}
+                            height={56}
+                            className="rounded object-cover bg-muted shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{manga.title}</p>
+                            <p className="text-xs text-muted-foreground">{manga.year} • {manga.type}</p>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{title}</p>
-                        {year && (
-                          <p className="text-xs text-muted-foreground">{year}</p>
-                        )}
-                      </div>
-
-                      {/* Format Badge */}
-                      {anime.type && (
-                        <div className="inline-flex px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium shrink-0">
-                          {anime.type.substring(0, 3).toUpperCase()}
-                        </div>
-                      )}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (query.length > 0 || activeFilterCount > 0) ? (
-            <div className="flex items-center justify-center gap-2 px-4 py-8 text-muted-foreground">
-              <Zap className="w-4 h-4" />
-              <span className="text-sm">No se encontraron resultados</span>
+              {(!animeResults || animeResults.length === 0) && (!mangaResults || mangaResults.length === 0) && (query.length > 0 || activeFilterCount > 0) && (
+                <div className="flex items-center justify-center gap-2 px-4 py-8 text-muted-foreground">
+                  <Zap className="w-4 h-4" />
+                  <span className="text-sm">No se encontraron resultados</span>
+                </div>
+              )}
             </div>
-          ) : null}
+          )}
         </div>
       )}
     </div>
