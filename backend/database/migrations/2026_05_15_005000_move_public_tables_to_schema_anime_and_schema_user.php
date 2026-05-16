@@ -71,7 +71,6 @@ return new class extends Migration
             'anime_trend',
             'media_type',
             'media_relation',
-            'media_reference',
             'anime_relation',
             'anime_trailer',
         ];

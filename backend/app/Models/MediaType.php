@@ -19,6 +19,11 @@ class MediaType extends Model
 
     protected $guarded = [];
 
+    public function media(): HasMany
+    {
+        return $this->hasMany(Media::class, 'type_code', 'code');
+    }
+
     public function mediaReferences(): HasMany
     {
         return $this->hasMany(MediaReference::class, 'type_code', 'code');

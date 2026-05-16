@@ -121,7 +121,7 @@ return new class extends Migration
             $table->timestampTz('created_at')->useCurrent();
             $table->timestampTz('updated_at')->useCurrent();
 
-            $table->foreign('id')->references('id')->on('media_reference')->cascadeOnDelete();
+            $table->foreign('id')->references('id')->on('schema_core.media')->cascadeOnDelete();
             $table->foreign('format_code')->references('code')->on('media_format');
             $table->foreign('status_code')->references('code')->on('media_status');
             $table->foreign('source_code')->references('code')->on('media_source');
@@ -129,6 +129,16 @@ return new class extends Migration
             $table->index('status_code', 'idx_schema_manga_manga_status_code');
             $table->index('format_code', 'idx_schema_manga_manga_format_code');
             $table->index('source_code', 'idx_schema_manga_manga_source_code');
+        });
+
+        Schema::create('schema_manga.manga_title', function (Blueprint $table) {
+            $table->integer('manga_id');
+            $table->text('title_type');
+            $table->text('title');
+
+            $table->primary(['manga_id', 'title_type']);
+            $table->foreign('manga_id')->references('id')->on('schema_manga.manga')->cascadeOnDelete();
+            $table->index('title_type', 'idx_schema_manga_manga_title_type');
         });
 
         Schema::create('schema_manga.manga_relation', function (Blueprint $table) {
@@ -140,7 +150,7 @@ return new class extends Migration
 
             $table->primary(['manga_id', 'related_media_id', 'relation_type_code']);
             $table->foreign('manga_id')->references('id')->on('schema_manga.manga')->cascadeOnDelete();
-            $table->foreign('related_media_id')->references('id')->on('media_reference')->cascadeOnDelete();
+            $table->foreign('related_media_id')->references('id')->on('schema_core.media')->cascadeOnDelete();
             $table->foreign('relation_type_code')->references('code')->on('media_relation');
         });
 
@@ -192,7 +202,7 @@ return new class extends Migration
             $table->timestampTz('created_at')->useCurrent();
 
             $table->primary(['media_id', 'staff_id', 'role_name']);
-            $table->foreign('media_id')->references('id')->on('media_reference')->cascadeOnDelete();
+            $table->foreign('media_id')->references('id')->on('schema_core.media')->cascadeOnDelete();
             $table->foreign('staff_id')->references('id')->on('schema_staff.staff')->cascadeOnDelete();
 
             $table->index('staff_id', 'idx_schema_staff_media_staff_staff_id');
@@ -207,7 +217,7 @@ return new class extends Migration
             $table->timestampTz('created_at')->useCurrent();
 
             $table->primary(['media_id', 'character_id']);
-            $table->foreign('media_id')->references('id')->on('media_reference')->cascadeOnDelete();
+            $table->foreign('media_id')->references('id')->on('schema_core.media')->cascadeOnDelete();
             $table->foreign('character_id')->references('id')->on('schema_characters.character')->cascadeOnDelete();
             $table->foreign('role_code')->references('code')->on('schema_characters.character_role');
 
@@ -254,6 +264,9 @@ return new class extends Migration
             'ALTER TABLE schema_manga.manga_relation ADD CONSTRAINT schema_manga_manga_relation_sort_order_positive CHECK (sort_order > 0)'
         );
         DB::statement(
+            "ALTER TABLE schema_manga.manga_title ADD CONSTRAINT schema_manga_manga_title_type_check CHECK (title_type IN ('romaji', 'english', 'native'))"
+        );
+        DB::statement(
             'ALTER TABLE schema_staff.media_staff ADD CONSTRAINT schema_staff_media_staff_sort_order_positive CHECK (sort_order > 0)'
         );
         DB::statement(
@@ -289,6 +302,7 @@ return new class extends Migration
         Schema::dropIfExists('schema_manga.manga_genre');
         Schema::dropIfExists('schema_manga.manga_trailer');
         Schema::dropIfExists('schema_manga.manga_relation');
+        Schema::dropIfExists('schema_manga.manga_title');
         Schema::dropIfExists('schema_manga.manga');
         Schema::dropIfExists('schema_characters.character_name_alias');
         Schema::dropIfExists('schema_characters.character');

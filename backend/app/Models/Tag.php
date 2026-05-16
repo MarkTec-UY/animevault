@@ -18,4 +18,10 @@ class Tag extends Model
         return $this->belongsToMany(Anime::class, 'anime_tag', 'tag_id', 'anime_id')
             ->withPivot('rank');
     }
+
+    public function manga(): BelongsToMany
+    {
+        return $this->belongsToMany(Manga::class, 'schema_manga.manga_tag', 'tag_id', 'manga_id')
+            ->withPivot('rank');
+    }
 }

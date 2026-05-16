@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class MediaSource extends Model
+class CharacterRole extends Model
 {
-    protected $table = 'media_source';
+    protected $table = 'schema_characters.character_role';
 
     protected $primaryKey = 'code';
 
@@ -19,13 +19,8 @@ class MediaSource extends Model
 
     protected $guarded = [];
 
-    public function anime(): HasMany
+    public function mediaCharacters(): HasMany
     {
-        return $this->hasMany(Anime::class, 'source_code', 'code');
-    }
-
-    public function manga(): HasMany
-    {
-        return $this->hasMany(Manga::class, 'source_code', 'code');
+        return $this->hasMany(MediaCharacter::class, 'role_code', 'code');
     }
 }

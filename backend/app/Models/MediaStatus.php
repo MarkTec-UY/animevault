@@ -23,4 +23,14 @@ class MediaStatus extends Model
     {
         return $this->hasMany(Anime::class, 'status_code', 'code');
     }
+
+    public function manga(): HasMany
+    {
+        return $this->hasMany(Manga::class, 'status_code', 'code');
+    }
+
+    public function mediaReferences(): HasMany
+    {
+        return $this->hasMany(MediaReference::class, 'status_code', 'code');
+    }
 }

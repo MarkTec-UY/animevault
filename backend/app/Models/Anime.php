@@ -88,6 +88,11 @@ class Anime extends Model
         return $this->belongsToMany(ExternalLink::class, 'anime_external_link', 'anime_id', 'external_link_id');
     }
 
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'id', 'id');
+    }
+
     public function mediaReference(): HasOne
     {
         return $this->hasOne(MediaReference::class, 'id', 'id');
@@ -102,6 +107,17 @@ class Anime extends Model
     {
         return $this->belongsToMany(MediaReference::class, 'anime_relation', 'anime_id', 'related_media_id', 'id', 'id')
             ->withPivot('relation_type_code', 'sort_order');
+    }
+
+    public function staffEntries(): HasMany
+    {
+        return $this->hasMany(MediaStaff::class, 'media_id', 'id');
+    }
+
+    public function characters(): BelongsToMany
+    {
+        return $this->belongsToMany(Character::class, 'schema_characters.media_character', 'media_id', 'character_id', 'id', 'id')
+            ->withPivot('role_code', 'character_name_override', 'sort_order', 'created_at');
     }
 
     public function trends(): HasMany

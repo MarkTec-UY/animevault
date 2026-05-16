@@ -23,4 +23,14 @@ class MediaFormat extends Model
     {
         return $this->hasMany(Anime::class, 'format_code', 'code');
     }
+
+    public function manga(): HasMany
+    {
+        return $this->hasMany(Manga::class, 'format_code', 'code');
+    }
+
+    public function mediaReferences(): HasMany
+    {
+        return $this->hasMany(MediaReference::class, 'format_code', 'code');
+    }
 }

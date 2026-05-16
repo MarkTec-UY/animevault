@@ -23,4 +23,9 @@ class ExternalLink extends Model
     {
         return $this->belongsToMany(Anime::class, 'anime_external_link', 'external_link_id', 'anime_id');
     }
+
+    public function manga(): BelongsToMany
+    {
+        return $this->belongsToMany(Manga::class, 'schema_manga.manga_external_link', 'external_link_id', 'manga_id');
+    }
 }
