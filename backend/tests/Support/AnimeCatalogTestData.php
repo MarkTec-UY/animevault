@@ -97,6 +97,8 @@ function recreateAnimeCatalogTables(): void
         $table->text('format_code')->nullable();
         $table->text('status_code')->nullable();
         $table->integer('episodes')->nullable();
+        $table->integer('next_airing_episode')->nullable();
+        $table->timestamp('next_airing_at')->nullable();
         $table->integer('duration_minutes')->nullable();
         $table->text('season_code')->nullable();
         $table->integer('season_year')->nullable();

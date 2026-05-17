@@ -2,7 +2,7 @@
  * Manga Data Types
  * Centralized types for manga-related data across the application
  */
-import type { Character, Review, StaffMember } from "./anime"
+import type { Character, Review, StaffMember, Trailer, ExternalLink } from "./anime"
 
 export interface RelatedMedia {
   id: number
@@ -40,4 +40,6 @@ export interface MangaData {
   reviews: Review[]
   related: RelatedMedia[]
   scoreBreakdown: { label: string; value: number; count: string }[]
+  trailer: Trailer | null
+  externalLinks: ExternalLink[]
 }

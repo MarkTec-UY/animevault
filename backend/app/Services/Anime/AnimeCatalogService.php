@@ -154,6 +154,11 @@ class AnimeCatalogService
                     ])
                     ->values()
                     ->all(),
+                'trailer' => $anime->trailer ? [
+                    'id' => $anime->trailer->trailer_id,
+                    'site' => $anime->trailer->site,
+                    'thumbnail' => $anime->trailer->thumbnail_url,
+                ] : null,
             ],
         );
 
@@ -252,6 +257,7 @@ class AnimeCatalogService
                 ])
                 ->with('type:code,description')
                 ->orderBy('external_link.site'),
+            'trailer',
             'trends' => fn (HasMany $relation) => $relation
                 ->orderBy('trend_date')
                 ->orderBy('episode'),
@@ -348,6 +354,9 @@ class AnimeCatalogService
             'favourites' => $this->nullableInt($anime->favourites),
             'is_adult' => (bool) $anime->is_adult,
             'start_date' => $this->nullableDateString($anime->start_date),
+            'next_airing_at' => $this->nullableDateTimeString($anime->next_airing_at),
+            'next_airing_episode' => $this->nullableInt($anime->next_airing_episode),
+            'next_airing_countdown' => $this->airingCountdown($anime->next_airing_at),
             'updated_at' => $this->nullableDateTimeString($anime->updated_at),
             'cover_image' => [
                 'color' => $anime->cover_image_color,
@@ -491,10 +500,21 @@ class AnimeCatalogService
         }
 
         if ($value instanceof CarbonInterface) {
-            return $value->toDateTimeString();
+            return $value->toIso8601String();
         }
 
         return (string) $value;
+    }
+
+    private function airingCountdown(?CarbonInterface $nextAiringAt): ?int
+    {
+        if ($nextAiringAt === null) {
+            return null;
+        }
+
+        $diff = $nextAiringAt->getTimestamp() - now()->getTimestamp();
+
+        return $diff > 0 ? $diff : null;
     }
 
     private function cacheStore(): CacheRepository

@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { AiringBadge } from "@/components/anime/airing-badge"
 import type { AnimeData } from "@/lib/types/anime"
 import { getAnimeUrl } from "@/lib/utils/anime-urls"
 
@@ -24,6 +25,13 @@ export function AnimeCard({ anime, className = "" }: AnimeCardProps) {
             loading="lazy"
             referrerPolicy="no-referrer"
           />
+          {anime.nextAiringAt && anime.nextAiringEpisode && (
+            <AiringBadge
+              nextAiringAt={anime.nextAiringAt}
+              nextAiringEpisode={anime.nextAiringEpisode}
+              nextAiringCountdown={anime.nextAiringCountdown}
+            />
+          )}
         </div>
         <h3 className="mt-2 font-semibold text-sm line-clamp-2 group-hover:text-primary">
           {anime.title}

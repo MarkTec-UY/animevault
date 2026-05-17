@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../Support/AnimeCatalogTestData.php';
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function (): void {
@@ -9,6 +10,10 @@ beforeEach(function (): void {
     recreateAnimeCatalogTables();
     seedAnimeReferenceData();
     seedAnimeCatalogFixtures();
+});
+
+afterEach(function (): void {
+    Carbon::setTestNow();
 });
 
 it('returns an anime with its related metadata', function () {
@@ -63,4 +68,35 @@ it('caches anime detail responses because they are expensive to rebuild', functi
 
     $secondResponse->assertOk()
         ->assertJsonPath('titles.english', 'Cowboy Bebop');
+});
+
+it('returns signed next airing countdown data for future airings only', function () {
+    Carbon::setTestNow('2026-05-16T00:00:00+00:00');
+
+    DB::table('anime')
+        ->where('id', 2)
+        ->update([
+            'next_airing_episode' => 8,
+            'next_airing_at' => '2026-05-22 13:30:00',
+        ]);
+
+    DB::table('anime')
+        ->where('id', 1)
+        ->update([
+            'next_airing_episode' => 9,
+            'next_airing_at' => '2026-05-15 23:00:00',
+        ]);
+
+    $futureResponse = $this->getJson('/api/v1/anime/2');
+    $pastResponse = $this->getJson('/api/v1/anime/1');
+
+    $futureResponse->assertOk()
+        ->assertJsonPath('next_airing_episode', 8)
+        ->assertJsonPath('next_airing_at', '2026-05-22T13:30:00+00:00')
+        ->assertJsonPath('next_airing_countdown', 567000);
+
+    $pastResponse->assertOk()
+        ->assertJsonPath('next_airing_episode', 9)
+        ->assertJsonPath('next_airing_at', '2026-05-15T23:00:00+00:00')
+        ->assertJsonPath('next_airing_countdown', null);
 });
