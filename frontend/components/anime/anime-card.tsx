@@ -29,7 +29,6 @@ export function AnimeCard({ anime, className = "" }: AnimeCardProps) {
             <AiringBadge
               nextAiringAt={anime.nextAiringAt}
               nextAiringEpisode={anime.nextAiringEpisode}
-              nextAiringCountdown={anime.nextAiringCountdown}
             />
           )}
         </div>

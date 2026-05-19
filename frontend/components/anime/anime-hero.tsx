@@ -52,7 +52,6 @@ export function AnimeHero({ anime }: AnimeHeroProps) {
               <AiringBadge
                 nextAiringAt={anime.nextAiringAt}
                 nextAiringEpisode={anime.nextAiringEpisode}
-                nextAiringCountdown={anime.nextAiringCountdown}
               />
             )}
           </div>

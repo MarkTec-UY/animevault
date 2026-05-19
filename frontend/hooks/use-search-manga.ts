@@ -31,12 +31,14 @@ export function useSearchManga(filters: MangaFilters | string, limit: number = 1
  */
 export function useInfiniteSearchManga(filters: MangaFilters, firstPageLimit: number = 18, subsequentPageLimit: number = 12) {
   const { search, ...restFilters } = filters
+  const stablePageSize = Math.max(firstPageLimit, subsequentPageLimit)
 
   return useInfiniteQuery({
     queryKey: ["search", "manga", "infinite", { search, ...restFilters, firstPageLimit, subsequentPageLimit }],
     queryFn: async ({ pageParam = 1 }) => {
-      const perPage = pageParam === 1 ? firstPageLimit : subsequentPageLimit
-      const response = await searchManga({ ...filters, page: pageParam, per_page: perPage })
+      // Offset pagination needs a stable page size; changing per_page between
+      // page 1 and page 2 causes overlapping windows and repeated manga.
+      const response = await searchManga({ ...filters, page: pageParam, per_page: stablePageSize })
       
       return {
         data: response.data.map((item) => transformApiResponseToMangaData(item)),

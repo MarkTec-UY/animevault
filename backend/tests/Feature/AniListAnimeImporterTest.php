@@ -308,6 +308,141 @@ it('starts from an explicit AniList page and persists a resume checkpoint', func
     Http::assertSent(fn (Request $request): bool => data_get($request->data(), 'variables.page') === 4);
 });
 
+it('splits date range imports into monthly buckets and persists monthly checkpoints', function () {
+    recreateAniListImportTables();
+    Cache::store(config('anime.cache.store', 'redis'))->flush();
+
+    Http::fake([
+        'https://graphql.anilist.co' => Http::sequence()
+            ->push(paginatedMediaPayload([
+                fakeAniListMedia(
+                    id: 100,
+                    title: 'Unknown Month Title',
+                    overrides: [
+                        'startDate' => [
+                            'year' => 2023,
+                            'month' => 0,
+                            'day' => 0,
+                        ],
+                    ],
+                ),
+            ], hasNextPage: false, currentPage: 1, perPage: 1), 200)
+            ->push(paginatedMediaPayload([
+                fakeAniListMedia(
+                    id: 200,
+                    title: 'January Title',
+                    overrides: [
+                        'startDate' => [
+                            'year' => 2023,
+                            'month' => 1,
+                            'day' => 0,
+                        ],
+                    ],
+                ),
+            ], hasNextPage: false, currentPage: 1, perPage: 1), 200),
+    ]);
+
+    $importer = app(AniListAnimeImporter::class);
+
+    $summary = $importer->importAllAnimeWithCursors(
+        limit: 2,
+        startId: 1,
+        perPage: 1,
+        startYear: 2023,
+        startMonth: 0,
+        startPage: 1,
+        delayMs: 0,
+        maxRateLimitRetries: 0,
+        maxServerErrorRetries: 0,
+        output: null,
+    );
+
+    expect($summary)->toMatchArray([
+        'imported' => 2,
+        'checked' => 2,
+        'pages' => 2,
+        'last_id' => 200,
+    ]);
+
+    $checkpoint = $importer->readImportCheckpoint();
+
+    expect($checkpoint)->not->toBeNull()
+        ->and($checkpoint['mode'])->toBe('date_range')
+        ->and($checkpoint['next_year'])->toBe(2023)
+        ->and($checkpoint['next_month'])->toBe(2)
+        ->and($checkpoint['next_page'])->toBe(1)
+        ->and($checkpoint['next_start_id'])->toBe(1)
+        ->and($checkpoint['last_imported_id'])->toBe(200);
+
+    Http::assertSent(fn (Request $request): bool => data_get($request->data(), 'variables.page') === 1
+        && data_get($request->data(), 'variables.startDateGreater') === 20229999
+        && data_get($request->data(), 'variables.startDateLesser') === 20230100);
+
+    Http::assertSent(fn (Request $request): bool => data_get($request->data(), 'variables.page') === 1
+        && data_get($request->data(), 'variables.startDateGreater') === 20230099
+        && data_get($request->data(), 'variables.startDateLesser') === 20230200);
+});
+
+it('refreshes only releasing anime for airing updates', function () {
+    recreateAniListImportTables();
+    Cache::store(config('anime.cache.store', 'redis'))->flush();
+
+    Http::fake([
+        'https://graphql.anilist.co' => Http::sequence()
+            ->push(paginatedMediaPayload([
+                fakeAniListMedia(
+                    id: 100,
+                    title: 'Spring Ongoing',
+                    overrides: [
+                        'status' => 'RELEASING',
+                        'nextAiringEpisode' => [
+                            'episode' => 8,
+                            'airingAt' => now()->addDay()->timestamp,
+                        ],
+                    ],
+                ),
+                fakeAniListMedia(
+                    id: 200,
+                    title: 'Still Airing',
+                    overrides: [
+                        'status' => 'RELEASING',
+                        'nextAiringEpisode' => [
+                            'episode' => 20,
+                            'airingAt' => now()->addDays(2)->timestamp,
+                        ],
+                    ],
+                ),
+            ], hasNextPage: false, currentPage: 1, perPage: 2), 200),
+    ]);
+
+    $summary = app(AniListAnimeImporter::class)->refreshActiveAnime(
+        limit: 10,
+        startPage: 1,
+        perPage: 2,
+        delayMs: 0,
+        maxRateLimitRetries: 0,
+        maxServerErrorRetries: 0,
+        output: null,
+    );
+
+    expect($summary)->toMatchArray([
+        'imported' => 2,
+        'checked' => 2,
+        'pages' => 1,
+        'last_id' => 200,
+    ]);
+
+    expect(DB::table('anime')->orderBy('id')->pluck('id')->all())->toBe([100, 200]);
+
+    Http::assertSent(function (Request $request): bool {
+        $query = (string) data_get($request->data(), 'query', '');
+        $statusIn = data_get($request->data(), 'variables.statusIn');
+
+        return str_contains($query, 'status_in: $statusIn')
+            && $statusIn === ['RELEASING'];
+    });
+});
+
 it('deduplicates AniList trends that share the same date before inserting', function () {
     recreateAniListImportTables();
 

@@ -76,7 +76,9 @@ export default function AnimeSearchPage() {
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const allAnimes = useMemo(() => {
-    return data?.pages.flatMap(page => page.data) ?? []
+    const items = data?.pages.flatMap(page => page.data) ?? []
+
+    return Array.from(new Map(items.map((anime) => [anime.id, anime])).values())
   }, [data])
 
   const totalResults = data?.pages[0]?.meta.total ?? 0
@@ -358,6 +360,7 @@ export default function AnimeSearchPage() {
         {allAnimes.length > 0 ? (
           <>
             <motion.div 
+              key="anime-results-grid"
               initial="hidden"
               animate="visible"
               variants={{
@@ -365,9 +368,9 @@ export default function AnimeSearchPage() {
               }}
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-12 md:gap-x-6"
             >
-              {allAnimes.map((anime, index) => (
+              {allAnimes.map((anime) => (
                 <motion.div
-                  key={`${anime.id}-${index}`}
+                  key={anime.id}
                   variants={{
                     hidden: { opacity: 0, scale: 0.9, y: 30 },
                     visible: { opacity: 1, scale: 1, y: 0 }
@@ -439,6 +442,7 @@ export default function AnimeSearchPage() {
           </div>
         ) : (
           <motion.div 
+            key="anime-empty-state"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center justify-center py-32 text-center space-y-8 bg-secondary/10 rounded-[4rem] border-2 border-dashed border-border/30 relative overflow-hidden"
