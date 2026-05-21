@@ -62,9 +62,9 @@ export function ProfileNotifications({
                       <Dot className="h-5 w-5 text-primary" aria-label="Unread" />
                     )}
                   </div>
-                  {n.message && (
+                  {(n.body ?? n.message) && (
                     <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
-                      {n.message}
+                      {n.body ?? n.message}
                     </p>
                   )}
                   <p className="mt-1 text-xs text-muted-foreground">

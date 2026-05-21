@@ -26,7 +26,8 @@ RUN apt-get update \
 WORKDIR /var/www/html
 
 COPY docker/entrypoint.sh /usr/local/bin/backend-entrypoint
-RUN chmod +x /usr/local/bin/backend-entrypoint
+COPY docker/scheduler-entrypoint.sh /usr/local/bin/backend-scheduler-entrypoint
+RUN chmod +x /usr/local/bin/backend-entrypoint /usr/local/bin/backend-scheduler-entrypoint
 
 EXPOSE 8000
 

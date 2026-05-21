@@ -76,7 +76,9 @@ export interface NotificationItem {
   user_id: number
   anime_id?: number | null
   type: string
+  episode?: number | null
   title: string
+  body?: string | null
   message?: string | null
   read_at?: string | null
   created_at: string

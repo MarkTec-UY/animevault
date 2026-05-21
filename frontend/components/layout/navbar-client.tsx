@@ -4,7 +4,6 @@ import { useCallback, useState, useSyncExternalStore } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
-  Bell,
   BookOpen,
   Calendar,
   ChevronDown,
@@ -24,7 +23,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
 import type { User } from "@/lib/types/auth"
-import { AnimeVaultLogo } from "@/components/shared/anime-vault-logo";
+import { AnimeVaultLogo } from "@/components/shared/anime-vault-logo"
+import { NotificationsDropdown } from "@/components/layout/notifications-dropdown"
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%2363A375' width='100' height='100'/%3E%3Ccircle cx='50' cy='35' r='25' fill='%23fff'/%3E%3Cpath d='M20 90c0-16.5 13.5-30 30-30s30 13.5 30 30' fill='%23fff'/%3E%3C/svg%3E"
 
@@ -72,6 +72,7 @@ export function NavbarClient({ user }: NavbarClientProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [hoveredNavLabel, setHoveredNavLabel] = useState<string | null>(null)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
 
   const subscribeToScroll = useCallback((onStoreChange: () => void) => {
     window.addEventListener("scroll", onStoreChange, { passive: true })
@@ -156,21 +157,31 @@ export function NavbarClient({ user }: NavbarClientProps) {
 
             {user ? (
               <>
-                <button
-                  className="relative hidden rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:flex"
-                  aria-label="Notifications"
-                >
-                  <Bell className="h-4.5 w-4.5" />
-                  <span
-                    className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary"
-                    aria-hidden="true"
-                  />
-                </button>
+                <NotificationsDropdown
+                  open={isNotificationsOpen}
+                  onOpenChange={(open) => {
+                    setIsNotificationsOpen(open)
+
+                    if (open) {
+                      setIsUserMenuOpen(false)
+                    }
+                  }}
+                />
 
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setIsUserMenuOpen((current) => !current)}
+                    onClick={() =>
+                      setIsUserMenuOpen((current) => {
+                        const nextOpen = !current
+
+                        if (nextOpen) {
+                          setIsNotificationsOpen(false)
+                        }
+
+                        return nextOpen
+                      })
+                    }
                     className="flex items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-secondary"
                   >
                     <span className="relative h-8 w-8 overflow-hidden rounded-full">

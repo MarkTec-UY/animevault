@@ -138,10 +138,17 @@ function normalizeNotification(raw: unknown): NotificationItem | null {
   return {
     id: toNumber(item.id),
     user_id: toNumber(item.user_id),
-    anime_id: item.anime_id == null ? null : toNumber(item.anime_id),
+    anime_id:
+      item.anime_id == null
+        ? ((item.anime as Record<string, unknown> | undefined)?.id == null
+            ? null
+            : toNumber((item.anime as Record<string, unknown>).id))
+        : toNumber(item.anime_id),
     type: String(item.type ?? "info"),
+    episode: item.episode == null ? null : toNumber(item.episode),
     title: String(item.title ?? "Notification"),
-    message: safe(item.message, null),
+    body: safe(item.body, null),
+    message: safe(item.message ?? item.body, null),
     read_at: safe(item.read_at, null),
     created_at: String(item.created_at ?? new Date().toISOString()),
     anime: item.anime ? normalizeAnime(item.anime) : null,

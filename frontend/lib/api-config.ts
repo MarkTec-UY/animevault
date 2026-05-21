@@ -53,6 +53,8 @@ export const API_CONFIG = {
       favorites: '/api/v1/me/favorites',
       anime: (id: number | string) => `/api/v1/me/anime/${id}`,
       notifications: '/api/v1/me/notifications',
+      notificationRead: (id: number | string) => `/api/v1/me/notifications/${id}/read`,
+      notificationsReadAll: '/api/v1/me/notifications/read-all',
     },
   },
 

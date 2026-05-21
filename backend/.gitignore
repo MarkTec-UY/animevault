@@ -24,3 +24,4 @@ Homestead.yaml
 Thumbs.db
 /app/Services/AniList/*
 /app/Console/*
+/.github
