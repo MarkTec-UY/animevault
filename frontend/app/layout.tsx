@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { DM_Serif_Display, Inter, Noto_Sans_JP } from "next/font/google"
+import { Inter, Noto_Sans_JP, Space_Grotesk } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 
 import { NavbarServer } from "@/components/layout/navbar-server"
@@ -14,11 +14,9 @@ const inter = Inter({
   display: 'swap',
 })
 
-const dmSerifDisplay = DM_Serif_Display({
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
-  weight: ['400'],
-  style: ['normal', 'italic'],
-  variable: '--font-dm-serif',
+  variable: '--font-space-grotesk',
   display: 'swap',
 })
 
@@ -64,7 +62,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("dark", "font-sans", inter.variable)}>
       <body
-        className={`${inter.variable} ${dmSerifDisplay.variable} ${notoSansJP.variable} font-sans antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${notoSansJP.variable} font-sans antialiased`}
       >
         <Providers>
           <NavbarServer />

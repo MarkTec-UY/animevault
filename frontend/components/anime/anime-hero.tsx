@@ -66,12 +66,12 @@ export function AnimeHero({ anime }: AnimeHeroProps) {
             </div>
 
             {/* Title + Japanese title */}
-            <div>
-              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-foreground leading-tight text-balance">
+            <div className="space-y-2">
+              <h1 className="detail-title text-balance">
                 {anime.title}
               </h1>
               {anime.jaTitle && (
-                <p className="text-muted-foreground text-base mt-1" lang="ja">{anime.jaTitle}</p>
+                <p className="text-sm uppercase tracking-[0.22em] text-muted-foreground/90 sm:text-base" lang="ja">{anime.jaTitle}</p>
               )}
             </div>
 

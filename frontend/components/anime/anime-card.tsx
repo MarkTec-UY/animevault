@@ -1,20 +1,23 @@
-import Link from "next/link"
+"use client"
 
+import Link from "next/link"
 import { AiringBadge } from "@/components/anime/airing-badge"
+import { AnimeHoverCard } from "@/components/anime/anime-hover-card"
 import type { AnimeData } from "@/lib/types/anime"
 import { getAnimeUrl } from "@/lib/utils/anime-urls"
 
 interface AnimeCardProps {
   anime: AnimeData
   className?: string
+  showHoverCard?: boolean
 }
 
 /**
- * Simple anime card link component
- * Routes to /anime/[id]/[title] format
+ * Anime card component with hover card showing detailed info
  */
-export function AnimeCard({ anime, className = "" }: AnimeCardProps) {
-  return (
+export function AnimeCard({ anime, className = "", showHoverCard = true }: AnimeCardProps) {
+
+  const cardContent = (
     <Link href={getAnimeUrl(anime)} className={className}>
       <div className="group">
         <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
@@ -32,7 +35,7 @@ export function AnimeCard({ anime, className = "" }: AnimeCardProps) {
             />
           )}
         </div>
-        <h3 className="mt-2 font-semibold text-sm line-clamp-2 group-hover:text-primary">
+        <h3 className="mt-2 font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
           {anime.title}
         </h3>
         {anime.score > 0 && (
@@ -40,6 +43,16 @@ export function AnimeCard({ anime, className = "" }: AnimeCardProps) {
         )}
       </div>
     </Link>
+  )
+
+  if (!showHoverCard) {
+    return cardContent
+  }
+
+  return (
+    <AnimeHoverCard anime={anime}>
+      {cardContent}
+    </AnimeHoverCard>
   )
 }
 

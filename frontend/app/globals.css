@@ -60,7 +60,8 @@
 
 @theme inline {
   --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  --font-heading: var(--font-space-grotesk), 'Space Grotesk', var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-heading);
   --font-mono: var(--font-geist-mono), 'Geist Mono', monospace;
 
   --color-background: var(--background);
@@ -137,6 +138,27 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+  .section-eyebrow {
+    @apply flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary/90;
+  }
+  .section-title {
+    @apply font-heading text-2xl font-bold tracking-[-0.04em] text-foreground sm:text-3xl;
+  }
+  .section-title-hero {
+    @apply font-heading text-4xl font-bold leading-none tracking-[-0.05em] sm:text-5xl;
+  }
+  .page-title {
+    @apply font-heading text-4xl font-bold tracking-[-0.05em] text-foreground sm:text-5xl;
+  }
+  .panel-title {
+    @apply font-heading text-xl font-semibold tracking-[-0.03em] text-foreground;
+  }
+  .detail-title {
+    @apply font-heading text-3xl font-bold leading-[0.95] tracking-[-0.05em] text-foreground sm:text-4xl lg:text-5xl;
+  }
+  .stat-display {
+    @apply font-heading text-3xl font-bold tracking-[-0.05em] text-foreground sm:text-4xl;
   }
   .card-hover {
     @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;

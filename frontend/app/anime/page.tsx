@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { useInfiniteSearchAnime } from "@/hooks/use-search-anime"
 import { useAnimeFilterOptions } from "@/hooks/use-anime-filter-options"
 import { AnimeCard } from "@/components/anime/anime-card"
+import { AnimeDefaultSections } from "@/components/shared/anime-category-sections"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +22,6 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import type { AnimeFilters } from "@/lib/api/search"
 
 export default function AnimeSearchPage() {
@@ -59,6 +59,17 @@ export default function AnimeSearchPage() {
     return params
   }, [searchParams])
 
+  // Check if any filter is active (excluding default sort)
+  const hasActiveFilters = useMemo(() => {
+    const { sort, ...otherFilters } = filters
+    const hasOtherFilters = Object.values(otherFilters).some(v => 
+      v !== undefined && v !== null && (Array.isArray(v) ? v.length > 0 : true)
+    )
+    // Consider sort as active filter only if it's not the default
+    const hasSortFilter = sort && sort !== "popularity_desc"
+    return hasOtherFilters || hasSortFilter
+  }, [filters])
+
   const { 
     data, 
     isLoading, 
@@ -72,10 +83,10 @@ export default function AnimeSearchPage() {
 
   // Load more when reaching the bottom
   useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
+    if (inView && hasNextPage && !isFetchingNextPage && hasActiveFilters) {
       fetchNextPage()
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage, hasActiveFilters])
 
   const allAnimes = useMemo(() => {
     const items = data?.pages.flatMap(page => page.data) ?? []
@@ -174,11 +185,11 @@ export default function AnimeSearchPage() {
             transition={{ delay: 0.1 }}
             className="text-muted-foreground text-lg max-w-2xl"
           >
-            Navega por el catálogo completo. Filtra por género, estado, formato y más.
+            Navega por el catalogo completo. Filtra por genero, estado, formato y mas.
           </motion.p>
         </div>
         
-        {totalResults > 0 && !isLoading && (
+        {hasActiveFilters && totalResults > 0 && !isLoading && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -197,7 +208,7 @@ export default function AnimeSearchPage() {
           <div className="relative flex-1 group w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
-              placeholder="¿Qué quieres ver hoy?..."
+              placeholder="Que quieres ver hoy?..."
               value={filters.search || ""}
               onChange={handleSearchChange}
               className="pl-12 h-12 text-lg bg-secondary/40 border-border/50 focus:bg-background transition-all rounded-2xl shadow-sm focus:ring-2 focus:ring-primary/20"
@@ -221,7 +232,7 @@ export default function AnimeSearchPage() {
                 <SheetHeader className="p-8 border-b border-border/50 bg-secondary/30">
                   <SheetTitle className="text-2xl font-bold">Filtros Avanzados</SheetTitle>
                   <SheetDescription className="text-base text-muted-foreground">
-                    Refina tu búsqueda para encontrar el anime perfecto.
+                    Refina tu busqueda para encontrar el anime perfecto.
                   </SheetDescription>
                 </SheetHeader>
                 
@@ -249,7 +260,7 @@ export default function AnimeSearchPage() {
                     {/* Genres */}
                     {filterOptions?.genres && (
                       <div className="space-y-4">
-                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Géneros</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Generos</h3>
                         <div className="flex flex-wrap gap-2">
                           {filterOptions.genres.map(genre => (
                             <Badge 
@@ -305,7 +316,7 @@ export default function AnimeSearchPage() {
 
                     {filterOptions?.seasons && (
                       <div className="space-y-4">
-                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Season</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Temporada</h3>
                         <div className="flex flex-wrap gap-2">
                           {filterOptions.seasons.map(season => (
                             <Badge
@@ -323,7 +334,7 @@ export default function AnimeSearchPage() {
 
                     {filterOptions?.years && (
                       <div className="space-y-4">
-                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Year</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Ano</h3>
                         <div className="flex flex-wrap gap-2">
                           {filterOptions.years.map(year => (
                             <Badge
@@ -412,9 +423,12 @@ export default function AnimeSearchPage() {
         )}
       </AnimatePresence>
 
-      {/* Content Grid */}
+      {/* Content */}
       <div className="space-y-12">
-        {allAnimes.length > 0 ? (
+        {/* Show default category sections when no filters are active */}
+        {!hasActiveFilters ? (
+          <AnimeDefaultSections />
+        ) : allAnimes.length > 0 ? (
           <>
             <motion.div 
               key="anime-results-grid"
@@ -449,7 +463,7 @@ export default function AnimeSearchPage() {
                     <Loader2 className="w-16 h-16 animate-spin text-primary absolute inset-0 [animation-duration:1.5s]" />
                     <div className="absolute inset-0 blur-2xl bg-primary/30 rounded-full animate-pulse" />
                   </div>
-                  <p className="text-primary font-bold text-lg tracking-wide animate-pulse uppercase">Actualizando catálogo...</p>
+                  <p className="text-primary font-bold text-lg tracking-wide animate-pulse uppercase">Actualizando catalogo...</p>
                 </div>
               ) : hasNextPage ? (
                 <Button 
@@ -458,12 +472,12 @@ export default function AnimeSearchPage() {
                   onClick={() => fetchNextPage()}
                   className="rounded-2xl px-16 h-16 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-bold text-lg shadow-xl hover:shadow-primary/10"
                 >
-                  Cargar más contenido
+                  Cargar mas contenido
                 </Button>
               ) : (
                 <div className="flex flex-col items-center gap-3 py-12 w-full">
                   <div className="h-px w-full max-w-md bg-gradient-to-r from-transparent via-border/50 to-transparent" />
-                  <p className="text-muted-foreground font-semibold text-lg italic">Has llegado al final del universo ✨</p>
+                  <p className="text-muted-foreground font-semibold text-lg italic">Has llegado al final del universo</p>
                 </div>
               )}
             </div>
@@ -490,7 +504,7 @@ export default function AnimeSearchPage() {
             <div className="space-y-2 px-4">
               <h3 className="text-2xl font-bold">Vaya, algo ha salido mal</h3>
               <p className="text-muted-foreground max-w-sm mx-auto text-lg">
-                No hemos podido cargar el catálogo. Por favor, inténtalo de nuevo más tarde.
+                No hemos podido cargar el catalogo. Por favor, intentalo de nuevo mas tarde.
               </p>
             </div>
             <Button variant="outline" size="lg" className="rounded-xl px-8 border-destructive/20 hover:bg-destructive/10" onClick={() => window.location.reload()}>
@@ -512,12 +526,12 @@ export default function AnimeSearchPage() {
             <div className="space-y-4 px-6 relative z-10">
               <h3 className="text-4xl font-black tracking-tight">Cero coincidencias</h3>
               <p className="text-muted-foreground max-w-md mx-auto text-xl leading-relaxed font-medium">
-                No hemos encontrado ningún anime que coincida con tus filtros. ¿Quizás una búsqueda más amplia?
+                No hemos encontrado ningun anime que coincida con tus filtros. Quizas una busqueda mas amplia?
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-4 relative z-10">
               <Button variant="default" size="lg" className="rounded-2xl px-12 h-16 text-lg font-bold shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all" onClick={clearFilters}>
-                Reiniciar búsqueda
+                Reiniciar busqueda
               </Button>
             </div>
           </motion.div>

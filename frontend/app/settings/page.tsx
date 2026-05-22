@@ -37,7 +37,7 @@ export default async function SettingsPage() {
         </Link>
 
         <header className="mt-4 mb-8">
-          <h1 className="font-serif text-4xl text-foreground">Settings</h1>
+          <h1 className="page-title">Settings</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage your profile, preferences, and account details.
           </p>

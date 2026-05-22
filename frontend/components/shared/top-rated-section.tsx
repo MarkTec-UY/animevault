@@ -19,11 +19,11 @@ export function TopRatedSection({ items }: TopRatedSectionProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-end justify-between">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm font-medium text-primary">
+            <div className="section-eyebrow">
               <Trophy className="h-4 w-4" />
               <span>Highest score</span>
             </div>
-            <h2 className="font-serif text-3xl text-foreground sm:text-4xl">Top Rated Anime</h2>
+            <h2 className="section-title">Top Rated Anime</h2>
           </div>
           <Link
             href="/anime"

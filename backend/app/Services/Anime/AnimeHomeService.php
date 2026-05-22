@@ -85,6 +85,18 @@ class AnimeHomeService
      */
     private function trendingAnime()
     {
+        $currentTrending = $this->baseAnimeQuery()
+            ->whereNotNull('schema_anime.anime.current_trending_rank')
+            ->orderBy('schema_anime.anime.current_trending_rank')
+            ->orderByDesc('schema_anime.anime.current_trending_score')
+            ->orderByDesc('schema_anime.anime.popularity')
+            ->limit(6)
+            ->get();
+
+        if ($currentTrending->isNotEmpty()) {
+            return $currentTrending;
+        }
+
         return $this->baseAnimeQuery()
             ->withMax('trends as peak_trending', 'trending')
             ->orderByDesc('peak_trending')
@@ -117,8 +129,17 @@ class AnimeHomeService
     private function topRatedAnime()
     {
         return $this->baseAnimeQuery()
+            ->orderByRaw(
+                'CASE
+                    WHEN COALESCE(schema_anime.anime.popularity, 0) >= 75000
+                      OR COALESCE(schema_anime.anime.favourites, 0) >= 5000
+                    THEN 0
+                    ELSE 1
+                END'
+            )
             ->orderByDesc('schema_anime.anime.average_score')
             ->orderByDesc('schema_anime.anime.favourites')
+            ->orderByDesc('schema_anime.anime.popularity')
             ->limit(4)
             ->get();
     }

@@ -26,7 +26,7 @@ export function CtaSection() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="font-serif text-4xl sm:text-5xl text-background leading-tight text-balance">
+            <h2 className="section-title-hero text-balance text-background">
               Your Anime Journey Starts Here
             </h2>
             <p className="text-background/60 text-lg leading-relaxed max-w-xl mx-auto">

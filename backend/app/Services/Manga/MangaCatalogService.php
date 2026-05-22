@@ -20,6 +20,7 @@ class MangaCatalogService
      * @var array<string, string>
      */
     private const SORT_LABELS = [
+        'trending_desc' => 'Trending now',
         'popularity_desc' => 'Most popular',
         'score_desc' => 'Highest score',
         'favourites_desc' => 'Most favourited',
@@ -281,6 +282,10 @@ class MangaCatalogService
     private function applySorting(Builder $query, string $sort): void
     {
         match ($sort) {
+            'trending_desc' => $query
+                ->orderByDesc('schema_manga.manga.popularity')
+                ->orderByDesc('schema_manga.manga.updated_at')
+                ->orderBy('schema_manga.manga.id'),
             'score_desc' => $query->orderByDesc('schema_manga.manga.average_score')->orderBy('schema_manga.manga.id'),
             'favourites_desc' => $query->orderByDesc('schema_manga.manga.favourites')->orderBy('schema_manga.manga.id'),
             'recently_updated' => $query->orderByDesc('schema_manga.manga.updated_at')->orderBy('schema_manga.manga.id'),

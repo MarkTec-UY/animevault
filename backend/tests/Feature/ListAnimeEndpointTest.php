@@ -58,6 +58,53 @@ it('validates unsupported query parameters', function () {
         ->assertJsonValidationErrors(['sort']);
 });
 
+it('accepts trending sorting and orders anime by trend momentum', function () {
+    $response = $this->getJson('/api/v1/anime?sort=trending_desc');
+
+    $response->assertOk()
+        ->assertJsonPath('meta.sort', 'trending_desc')
+        ->assertJsonPath('data.0.id', 2)
+        ->assertJsonPath('data.1.id', 1);
+});
+
+it('keeps obscure high-score anime behind established top-rated titles', function () {
+    DB::table('anime')->insert([
+        'id' => 999,
+        'format_code' => 'TV',
+        'status_code' => 'FINISHED',
+        'episodes' => 12,
+        'duration_minutes' => 24,
+        'season_code' => 'SPRING',
+        'season_year' => 2026,
+        'source_code' => 'ORIGINAL',
+        'description' => 'Very obscure but highly scored title.',
+        'cover_image_color' => '#111111',
+        'cover_image_large' => 'https://cdn.example.com/unknown-cover.jpg',
+        'banner_image' => 'https://cdn.example.com/unknown-banner.jpg',
+        'average_score' => 100,
+        'popularity' => 125,
+        'is_adult' => false,
+        'favourites' => 12,
+        'start_date' => '2026-03-01',
+        'end_date' => '2026-06-01',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    DB::table('anime_title')->insert([
+        'anime_id' => 999,
+        'title_type' => 'english',
+        'title' => 'Unknown Masterpiece',
+    ]);
+
+    $response = $this->getJson('/api/v1/anime?sort=score_desc&per_page=3');
+
+    $response->assertOk()
+        ->assertJsonPath('data.0.id', 2)
+        ->assertJsonPath('data.1.id', 1)
+        ->assertJsonPath('data.2.id', 999);
+});
+
 it('caches paginated anime lists for repeated filter combinations', function () {
     $firstResponse = $this->getJson('/api/v1/anime?per_page=2&sort=popularity_desc');
 

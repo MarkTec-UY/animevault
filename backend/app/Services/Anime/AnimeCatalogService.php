@@ -58,6 +58,7 @@ class AnimeCatalogService
      * @var array<string, string>
      */
     private const SORT_LABELS = [
+        'trending_desc' => 'Trending now',
         'popularity_desc' => 'Most popular',
         'score_desc' => 'Highest score',
         'favourites_desc' => 'Most favourited',
@@ -344,7 +345,13 @@ class AnimeCatalogService
     private function applySorting(Builder $query, string $sort): void
     {
         match ($sort) {
-            'score_desc' => $query->orderByDesc('schema_anime.anime.average_score')->orderBy('schema_anime.anime.id'),
+            'trending_desc' => $query
+                ->orderByRaw('CASE WHEN schema_anime.anime.current_trending_rank IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('schema_anime.anime.current_trending_rank')
+                ->orderByDesc('schema_anime.anime.current_trending_score')
+                ->orderByDesc('schema_anime.anime.popularity')
+                ->orderBy('schema_anime.anime.id'),
+            'score_desc' => $this->applyTopRatedOrdering($query),
             'favourites_desc' => $query->orderByDesc('schema_anime.anime.favourites')->orderBy('schema_anime.anime.id'),
             'recently_updated' => $query->orderByDesc('schema_anime.anime.updated_at')->orderBy('schema_anime.anime.id'),
             'start_date_desc' => $query->orderByDesc('schema_anime.anime.start_date')->orderBy('schema_anime.anime.id'),
@@ -353,6 +360,29 @@ class AnimeCatalogService
             )->orderBy('schema_anime.anime.id'),
             default => $query->orderByDesc('schema_anime.anime.popularity')->orderBy('schema_anime.anime.id'),
         };
+    }
+
+    /**
+     * Prioritize titles with both a strong score and enough community signal
+     * so "top rated" does not get dominated by obscure entries with tiny samples.
+     *
+     * @param  Builder<Anime>  $query
+     */
+    private function applyTopRatedOrdering(Builder $query): void
+    {
+        $query
+            ->orderByRaw(
+                'CASE
+                    WHEN COALESCE(schema_anime.anime.popularity, 0) >= 75000
+                      OR COALESCE(schema_anime.anime.favourites, 0) >= 5000
+                    THEN 0
+                    ELSE 1
+                END'
+            )
+            ->orderByDesc('schema_anime.anime.average_score')
+            ->orderByDesc('schema_anime.anime.favourites')
+            ->orderByDesc('schema_anime.anime.popularity')
+            ->orderBy('schema_anime.anime.id');
     }
 
     /**

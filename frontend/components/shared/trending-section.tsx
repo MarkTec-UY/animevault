@@ -85,7 +85,7 @@ export function TrendingSection({ items }: TrendingSectionProps) {
               <TrendingUp className="h-4 w-4" />
               <span>Right now</span>
             </div>
-            <h2 className="font-serif text-3xl text-foreground sm:text-4xl">Trending Anime</h2>
+            <h2 className="font-bold text-3xl text-foreground sm:text-4xl tracking-tight">Trending Anime</h2>
           </div>
           <Link
             href="/anime"

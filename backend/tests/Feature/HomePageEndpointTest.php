@@ -18,7 +18,7 @@ it('returns the aggregated public home page feed', function () {
         ->assertJsonPath('hero.featured.id', 2)
         ->assertJsonPath('hero.featured.preferred_title', 'Frieren: Beyond Journey\'s End')
         ->assertJsonPath('hero.spotlight.0.id', 1)
-        ->assertJsonPath('trending.0.id', 1)
+        ->assertJsonPath('trending.0.id', 2)
         ->assertJsonPath('seasonal.label', 'Fall 2023')
         ->assertJsonPath('seasonal.items.0.id', 2)
         ->assertJsonPath('top_rated.0.id', 2)

@@ -443,6 +443,70 @@ it('refreshes only releasing anime for airing updates', function () {
     });
 });
 
+it('refreshes the current AniList trending snapshot and clears stale ranks', function () {
+    recreateAniListImportTables();
+    Cache::store(config('anime.cache.store', 'redis'))->flush();
+
+    DB::table('anime')->insert([
+        'id' => 999,
+        'format_code' => 'TV',
+        'status_code' => 'FINISHED',
+        'episodes' => 12,
+        'duration_minutes' => 24,
+        'season_code' => 'SPRING',
+        'season_year' => 2025,
+        'source_code' => 'MANGA',
+        'description' => 'Legacy stale trending row.',
+        'average_score' => 77,
+        'popularity' => 500,
+        'is_adult' => false,
+        'favourites' => 10,
+        'current_trending_rank' => 99,
+        'current_trending_score' => 1,
+        'current_trending_fetched_at' => now()->subDay(),
+        'created_at' => now()->subDay(),
+        'updated_at' => now()->subDay(),
+    ]);
+
+    Http::fake([
+        'https://graphql.anilist.co' => Http::sequence()
+            ->push(paginatedMediaPayload([
+                fakeAniListMedia(id: 100, title: 'Cowboy Bebop', overrides: ['trending' => 247]),
+                fakeAniListMedia(id: 200, title: 'Monster', overrides: ['trending' => 227]),
+            ], hasNextPage: false, currentPage: 1, perPage: 2), 200),
+    ]);
+
+    $summary = app(AniListAnimeImporter::class)->refreshTrendingAnime(
+        limit: 2,
+        startPage: 1,
+        perPage: 2,
+        delayMs: 0,
+        maxRateLimitRetries: 0,
+        maxServerErrorRetries: 0,
+        output: null,
+    );
+
+    expect($summary)->toMatchArray([
+        'imported' => 2,
+        'checked' => 2,
+        'pages' => 1,
+        'last_id' => 200,
+    ]);
+
+    expect(DB::table('anime')->where('id', 100)->value('current_trending_rank'))->toBe(1)
+        ->and(DB::table('anime')->where('id', 100)->value('current_trending_score'))->toBe(247)
+        ->and(DB::table('anime')->where('id', 200)->value('current_trending_rank'))->toBe(2)
+        ->and(DB::table('anime')->where('id', 200)->value('current_trending_score'))->toBe(227)
+        ->and(DB::table('anime')->where('id', 999)->value('current_trending_rank'))->toBeNull()
+        ->and(DB::table('anime')->where('id', 999)->value('current_trending_score'))->toBeNull();
+
+    Http::assertSent(function (Request $request): bool {
+        $query = (string) data_get($request->data(), 'query', '');
+
+        return str_contains($query, 'sort: TRENDING_DESC');
+    });
+});
+
 it('deduplicates AniList trends that share the same date before inserting', function () {
     recreateAniListImportTables();
 
@@ -703,6 +767,7 @@ function fakeAniListMedia(int $id, string $title, array $overrides = []): array
         'source' => 'MANGA',
         'genres' => [],
         'averageScore' => 80,
+        'trending' => 120,
         'popularity' => 1000,
         'isAdult' => false,
         'favourites' => 500,
@@ -779,6 +844,9 @@ function recreateAniListImportTables(): void
         $table->integer('popularity')->nullable();
         $table->boolean('is_adult')->default(false);
         $table->integer('favourites')->nullable();
+        $table->integer('current_trending_rank')->nullable();
+        $table->integer('current_trending_score')->nullable();
+        $table->timestamp('current_trending_fetched_at')->nullable();
         $table->date('start_date')->nullable();
         $table->date('end_date')->nullable();
         $table->text('cover_image_color')->nullable();

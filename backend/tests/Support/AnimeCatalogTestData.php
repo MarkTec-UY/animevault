@@ -111,6 +111,9 @@ function recreateAnimeCatalogTables(): void
         $table->integer('popularity')->nullable();
         $table->boolean('is_adult')->default(false);
         $table->integer('favourites')->nullable();
+        $table->integer('current_trending_rank')->nullable();
+        $table->integer('current_trending_score')->nullable();
+        $table->timestamp('current_trending_fetched_at')->nullable();
         $table->date('start_date')->nullable();
         $table->date('end_date')->nullable();
         $table->timestamp('created_at')->nullable();
@@ -251,6 +254,9 @@ function seedAnimeCatalogFixtures(): void
             'popularity' => 99999,
             'is_adult' => false,
             'favourites' => 25000,
+            'current_trending_rank' => 2,
+            'current_trending_score' => 215,
+            'current_trending_fetched_at' => '2026-03-25 00:00:00',
             'start_date' => '1998-04-03',
             'end_date' => '1999-04-24',
             'created_at' => '2026-03-25 00:00:00',
@@ -273,6 +279,9 @@ function seedAnimeCatalogFixtures(): void
             'popularity' => 150000,
             'is_adult' => false,
             'favourites' => 48000,
+            'current_trending_rank' => 1,
+            'current_trending_score' => 247,
+            'current_trending_fetched_at' => '2026-03-25 00:00:00',
             'start_date' => '2023-09-29',
             'end_date' => '2024-03-22',
             'created_at' => '2026-03-25 00:00:00',
@@ -295,6 +304,9 @@ function seedAnimeCatalogFixtures(): void
             'popularity' => 40000,
             'is_adult' => true,
             'favourites' => 16000,
+            'current_trending_rank' => null,
+            'current_trending_score' => null,
+            'current_trending_fetched_at' => null,
             'start_date' => '1998-02-28',
             'end_date' => '1998-02-28',
             'created_at' => '2026-03-25 00:00:00',

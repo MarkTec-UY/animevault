@@ -225,7 +225,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
       {/* Banner upload */}
       <section className="space-y-3">
         <div>
-          <h3 className="font-serif text-xl text-foreground">Banner</h3>
+          <h3 className="panel-title">Banner</h3>
           <p className="text-xs text-muted-foreground">
             Wide image shown at the top of your profile. Recommended 1500×400.
           </p>
@@ -281,7 +281,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
       {/* Avatar upload */}
       <section className="space-y-3">
         <div>
-          <h3 className="font-serif text-xl text-foreground">Avatar</h3>
+          <h3 className="panel-title">Avatar</h3>
           <p className="text-xs text-muted-foreground">
             Square image used everywhere your profile appears.
           </p>
@@ -343,7 +343,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
       {/* Identity */}
       <section className="space-y-4 rounded-xl border border-border bg-card p-6">
         <div>
-          <h3 className="font-serif text-xl text-foreground">
+          <h3 className="panel-title">
             Public details
           </h3>
           <p className="text-xs text-muted-foreground">
@@ -395,7 +395,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
       {/* Preferences */}
       <section className="space-y-5 rounded-xl border border-border bg-card p-6">
         <div>
-          <h3 className="font-serif text-xl text-foreground">Preferences</h3>
+          <h3 className="panel-title">Preferences</h3>
           <p className="text-xs text-muted-foreground">
             Personalize how anime data is presented to you.
           </p>

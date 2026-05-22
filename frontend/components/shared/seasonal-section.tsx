@@ -20,11 +20,11 @@ export function SeasonalSection({ label, items }: SeasonalSectionProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-end justify-between">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm font-medium text-accent">
+            <div className="section-eyebrow text-accent">
               <Calendar className="h-4 w-4" />
               <span>{label}</span>
             </div>
-            <h2 className="font-serif text-3xl text-foreground sm:text-4xl">This Season</h2>
+            <h2 className="section-title">This Season</h2>
           </div>
           <Link
             href="/anime"

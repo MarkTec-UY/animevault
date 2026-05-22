@@ -27,7 +27,7 @@ export function StatsBanner({ items }: StatsBannerProps) {
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-serif text-3xl font-normal text-foreground sm:text-4xl">
+                  <p className="stat-display">
                     {formatCompactNumber(stat.value) ?? stat.value}
                   </p>
                   <p className="mt-0.5 text-sm font-semibold text-foreground">{stat.label}</p>

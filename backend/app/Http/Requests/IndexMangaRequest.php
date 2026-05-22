@@ -34,6 +34,7 @@ class IndexMangaRequest extends FormRequest
                 'nullable',
                 'string',
                 Rule::in([
+                    'trending_desc',
                     'popularity_desc',
                     'score_desc',
                     'favourites_desc',

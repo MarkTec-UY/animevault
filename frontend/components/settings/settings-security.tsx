@@ -12,7 +12,7 @@ export function SettingsSecurity({ user }: SettingsSecurityProps) {
   return (
     <section className="space-y-4 rounded-xl border border-border bg-card p-6">
       <div>
-        <h3 className="font-serif text-xl text-foreground">Account & security</h3>
+        <h3 className="panel-title">Account & security</h3>
         <p className="text-xs text-muted-foreground">
           Sensitive account details. Some actions require re-authentication.
         </p>
