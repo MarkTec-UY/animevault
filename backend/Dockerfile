@@ -11,6 +11,7 @@ RUN apt-get update \
         libzip-dev \
         netcat-openbsd \
         unzip \
+        tzdata \
     && docker-php-ext-install \
         bcmath \
         intl \

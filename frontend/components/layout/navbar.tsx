@@ -49,11 +49,14 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 transition duration-300",
         isScrolled
           ? "bg-background/90 backdrop-blur-md border-b border-border shadow-lg shadow-black/20"
           : "bg-transparent"
       )}
+      style={{
+        paddingRight: "var(--removed-body-scroll-bar-size)",
+      }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">

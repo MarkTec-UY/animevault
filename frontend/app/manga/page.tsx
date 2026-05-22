@@ -19,6 +19,7 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetFooter,
+  SheetClose,
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { MangaFilters } from "@/lib/api/search"
@@ -200,7 +201,7 @@ export default function MangaSearchPage() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col border-l border-border/50 shadow-2xl">
+              <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col border-l border-border/50 shadow-2xl overflow-hidden">
                 <SheetHeader className="p-8 border-b border-border/50 bg-secondary/30">
                   <SheetTitle className="text-2xl font-bold">Filtros Avanzados</SheetTitle>
                   <SheetDescription className="text-base text-muted-foreground">
@@ -208,7 +209,7 @@ export default function MangaSearchPage() {
                   </SheetDescription>
                 </SheetHeader>
                 
-                <ScrollArea className="flex-1 p-8 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
                   <div className="space-y-10 pb-8">
                     {/* Sort Options */}
                     {filterOptions?.sort_options && (
@@ -286,15 +287,17 @@ export default function MangaSearchPage() {
                       </div>
                     )}
                   </div>
-                </ScrollArea>
+                </div>
 
                 <SheetFooter className="p-8 border-t border-border/50 bg-background/50 backdrop-blur-md flex-row gap-3 sm:space-x-0">
                   <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold border-border/50 hover:bg-secondary" onClick={clearFilters}>
                     Limpiar
                   </Button>
-                  <Button className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90" onClick={() => {}}>
-                    Aplicar filtros
-                  </Button>
+                  <SheetClose asChild>
+                    <Button className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90">
+                      Aplicar filtros
+                    </Button>
+                  </SheetClose>
                 </SheetFooter>
               </SheetContent>
             </Sheet>
@@ -475,7 +478,7 @@ export default function MangaSearchPage() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: 100 }}
             onClick={scrollToTop}
-            className="fixed bottom-10 right-10 z-50 p-5 rounded-3xl bg-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-110 active:scale-90 transition-all group"
+            className="fixed bottom-10 right-10 z-50 p-5 rounded-3xl bg-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-110 active:scale-90 transition group"
           >
             <ArrowUp className="w-7 h-7 group-hover:-translate-y-1 transition-transform" />
             <div className="absolute inset-0 rounded-3xl bg-primary animate-ping opacity-20 pointer-events-none" />

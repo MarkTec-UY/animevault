@@ -49,11 +49,15 @@ export function SearchAnime() {
     const filters: Omit<AnimeFilters, "search"> = {}
     const statusParam = searchParams.get("status")
     const formatParam = searchParams.get("format")
+    const seasonParam = searchParams.get("season")
     const genresParam = searchParams.get("genres")
+    const yearParam = searchParams.get("year")
     
     if (statusParam) filters.status = statusParam.split(",")
     if (formatParam) filters.format = formatParam.split(",")
+    if (seasonParam) filters.season = seasonParam.split(",")
     if (genresParam) filters.genres = genresParam.split(",")
+    if (yearParam) filters.year = parseInt(yearParam, 10)
     
     setActiveFilters(filters)
   }
@@ -75,6 +79,7 @@ export function SearchAnime() {
   const isLoading = isAnimeLoading || isMangaLoading
   const hasSearchError = isAnimeError || isMangaError
   const filterOptions = searchType === "manga" ? mangaFilterOptions : animeFilterOptions
+  const animeFilterSectionOptions = searchType === "anime" ? animeFilterOptions : undefined
   const animeResultCount = animeResults?.length ?? 0
   const mangaResultCount = mangaResults?.length ?? 0
   const hasAnyResults = animeResultCount > 0 || mangaResultCount > 0
@@ -94,6 +99,8 @@ export function SearchAnime() {
     Object.entries(activeFilters).forEach(([key, value]) => {
       if (value && Array.isArray(value) && value.length > 0) {
         params.set(key, value.join(","))
+      } else if (typeof value === "number") {
+        params.set(key, value.toString())
       }
     })
 
@@ -139,6 +146,13 @@ export function SearchAnime() {
       
       return { ...prev, [type]: [...current, value] }
     })
+  }
+
+  const toggleYearFilter = (year: number) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      year: prev.year === year ? undefined : year,
+    }))
   }
 
   const isFilterActive = (type: keyof Omit<AnimeFilters, "search">, value: string) => {
@@ -198,7 +212,7 @@ export function SearchAnime() {
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-0" align="end">
+          <PopoverContent className="w-80 p-0 overflow-hidden" align="end">
             <div className="p-4 border-b border-border">
               <Tabs value={searchType} onValueChange={(v) => setSearchType(v as "anime" | "manga")} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -211,8 +225,7 @@ export function SearchAnime() {
                 Refina tu búsqueda de {searchType}
               </p>
             </div>
-            <ScrollArea className="h-[400px] custom-scrollbar">
-              <div className="p-4 space-y-6">
+            <div className="max-h-[400px] overflow-y-auto custom-scrollbar p-4 space-y-6">
                 {/* Genres */}
                 {filterOptions?.genres && (
                   <div className="space-y-3">
@@ -269,8 +282,43 @@ export function SearchAnime() {
                     </div>
                   </div>
                 )}
-              </div>
-            </ScrollArea>
+
+                {animeFilterSectionOptions?.seasons && (
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Season</p>
+                    <div className="flex flex-wrap gap-2">
+                      {animeFilterSectionOptions.seasons.map((season) => (
+                        <Badge 
+                          key={season.code}
+                          variant={isFilterActive("season", season.code) ? "default" : "outline"}
+                          className="cursor-pointer"
+                          onClick={() => toggleFilter("season", season.code)}
+                        >
+                          {season.description}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {filterOptions?.years && (
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Year</p>
+                    <div className="flex flex-wrap gap-2">
+                      {filterOptions.years.map(year => (
+                        <Badge 
+                          key={year}
+                          variant={activeFilters.year === year ? "default" : "outline"}
+                          className="cursor-pointer"
+                          onClick={() => toggleYearFilter(year)}
+                        >
+                          {year}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+            </div>
             <div className="p-2 border-t border-border bg-muted/30 flex gap-2">
               {activeFilterCount > 0 && (
                 <Button 

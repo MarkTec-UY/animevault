@@ -88,11 +88,14 @@ export function NavbarClient({ user }: NavbarClientProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 transition duration-300",
         isScrolled
           ? "border-b border-border bg-background/90 shadow-lg shadow-black/20 backdrop-blur-md"
           : "bg-transparent",
       )}
+      style={{
+        paddingRight: "var(--removed-body-scroll-bar-size)",
+      }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">

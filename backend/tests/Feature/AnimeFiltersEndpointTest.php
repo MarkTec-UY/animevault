@@ -15,9 +15,14 @@ it('returns metadata required to build anime discovery filters', function () {
     $response = $this->getJson('/api/v1/anime/filters');
 
     $response->assertOk()
-        ->assertJsonPath('formats.0.code', 'MOVIE')
-        ->assertJsonPath('statuses.0.code', 'FINISHED')
-        ->assertJsonPath('seasons.0.code', 'FALL')
+        ->assertJsonPath('formats.0.code', 'TV')
+        ->assertJsonPath('formats.0.description', 'TV Show')
+        ->assertJsonPath('statuses.0.code', 'RELEASING')
+        ->assertJsonPath('statuses.0.description', 'Airing')
+        ->assertJsonPath('statuses.1.code', 'NOT_YET_RELEASED')
+        ->assertJsonPath('statuses.1.description', 'Not Yet Aired')
+        ->assertJsonPath('seasons.0.code', 'WINTER')
+        ->assertJsonPath('seasons.1.code', 'SPRING')
         ->assertJsonPath('sources.0.code', 'MANGA')
         ->assertJsonPath('genres.0', 'Action')
         ->assertJsonPath('years.0', 2023)

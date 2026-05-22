@@ -40,6 +40,7 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_URL: http://localhost:8000
+      TZ: America/Montevideo
       DB_CONNECTION: pgsql
       DB_HOST: pgsql
       DB_PORT: "5432"
@@ -74,6 +75,7 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_URL: http://localhost:8000
+      TZ: America/Montevideo
       DB_CONNECTION: pgsql
       DB_HOST: pgsql
       DB_PORT: "5432"

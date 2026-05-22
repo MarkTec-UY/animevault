@@ -14,10 +14,46 @@ use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 class AnimeCatalogService
 {
+    /**
+     * @var array<string, string>
+     */
+    private const FORMAT_LABELS = [
+        'TV' => 'TV Show',
+        'TV_SHORT' => 'TV Short',
+        'MOVIE' => 'Movie',
+        'SPECIAL' => 'Special',
+        'OVA' => 'OVA',
+        'ONA' => 'ONA',
+        'MUSIC' => 'Music',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    private const STATUS_LABELS = [
+        'RELEASING' => 'Airing',
+        'NOT_YET_RELEASED' => 'Not Yet Aired',
+        'FINISHED' => 'Finished',
+        'HIATUS' => 'Hiatus',
+        'CANCELLED' => 'Cancelled',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    private const SEASON_LABELS = [
+        'WINTER' => 'Winter',
+        'SPRING' => 'Spring',
+        'SUMMER' => 'Summer',
+        'FALL' => 'Fall',
+    ];
+
     /**
      * @var array<string, string>
      */
@@ -176,21 +212,15 @@ class AnimeCatalogService
             $this->filtersCacheKey(),
             $this->cacheTtl('filters'),
             fn (): array => [
-                'formats' => $this->referenceOptions(MediaFormat::query()),
-                'statuses' => $this->referenceOptions(MediaStatus::query()),
-                'seasons' => $this->referenceOptions(MediaSeason::query()),
+                'formats' => $this->canonicalReferenceOptions(MediaFormat::query(), self::FORMAT_LABELS),
+                'statuses' => $this->canonicalReferenceOptions(MediaStatus::query(), self::STATUS_LABELS),
+                'seasons' => $this->canonicalReferenceOptions(MediaSeason::query(), self::SEASON_LABELS),
                 'sources' => $this->referenceOptions(MediaSource::query()),
                 'genres' => Genre::query()
                     ->orderBy('name')
                     ->pluck('name')
                     ->all(),
-                'years' => Anime::query()
-                    ->whereNotNull('season_year')
-                    ->distinct()
-                    ->orderByDesc('season_year')
-                    ->pluck('season_year')
-                    ->map(fn (mixed $year): int => (int) $year)
-                    ->all(),
+                'years' => $this->yearOptions(),
                 'sort_options' => $this->sortOptions(),
             ],
         );
@@ -382,9 +412,46 @@ class AnimeCatalogService
             ->get(['code', 'description'])
             ->map(fn ($row): array => [
                 'code' => $row->code,
-                'description' => $row->description,
+                'description' => $this->displayReferenceDescription((string) $row->code, $row->description),
             ])
             ->all();
+    }
+
+    /**
+     * @param  Builder<MediaFormat|MediaSeason|MediaStatus>  $query
+     * @param  array<string, string>  $canonicalLabels
+     * @return list<array{code:string, description:string}>
+     */
+    private function canonicalReferenceOptions(Builder $query, array $canonicalLabels): array
+    {
+        $databaseOptions = $query
+            ->get(['code', 'description'])
+            ->mapWithKeys(fn ($row): array => [
+                (string) $row->code => $this->displayReferenceDescription((string) $row->code, $row->description)
+                    ?? $this->humanizeCode((string) $row->code),
+            ]);
+
+        $options = collect();
+
+        foreach ($canonicalLabels as $code => $label) {
+            $options->push([
+                'code' => $code,
+                'description' => $label,
+            ]);
+        }
+
+        foreach ($databaseOptions as $code => $description) {
+            if (array_key_exists((string) $code, $canonicalLabels)) {
+                continue;
+            }
+
+            $options->push([
+                'code' => (string) $code,
+                'description' => (string) $description,
+            ]);
+        }
+
+        return $options->all();
     }
 
     /**
@@ -466,8 +533,70 @@ class AnimeCatalogService
 
         return [
             'code' => $code,
-            'description' => $description,
+            'description' => $this->displayReferenceDescription($code, $description),
         ];
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function yearOptions(): array
+    {
+        $animeTable = $this->animeTable();
+
+        $seasonYears = DB::table($animeTable)
+            ->whereNotNull('season_year')
+            ->pluck('season_year');
+
+        $startDateYears = DB::table($animeTable)
+            ->whereNull('season_year')
+            ->whereNotNull('start_date')
+            ->pluck('start_date')
+            ->map(function (mixed $startDate): ?int {
+                $value = (string) $startDate;
+
+                if (! preg_match('/^\d{4}/', $value, $matches)) {
+                    return null;
+                }
+
+                return (int) $matches[0];
+            });
+
+        return $seasonYears
+            ->concat($startDateYears)
+            ->filter(fn (mixed $year): bool => is_numeric($year) && (int) $year > 0)
+            ->map(fn (mixed $year): int => (int) $year)
+            ->unique()
+            ->sortDesc()
+            ->values()
+            ->all();
+    }
+
+    private function animeTable(): string
+    {
+        if (DB::getDriverName() !== 'sqlite' && Schema::hasTable('schema_anime.anime')) {
+            return 'schema_anime.anime';
+        }
+
+        return 'anime';
+    }
+
+    private function displayReferenceDescription(string $code, ?string $description): ?string
+    {
+        $normalizedCode = strtoupper(trim($code));
+
+        return self::FORMAT_LABELS[$normalizedCode]
+            ?? self::STATUS_LABELS[$normalizedCode]
+            ?? self::SEASON_LABELS[$normalizedCode]
+            ?? $description;
+    }
+
+    private function humanizeCode(string $code): string
+    {
+        return collect(explode('_', strtolower($code)))
+            ->filter()
+            ->map(fn (string $segment): string => ucfirst($segment))
+            ->implode(' ');
     }
 
     private function nullableInt(mixed $value): ?int

@@ -19,6 +19,7 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetFooter,
+  SheetClose,
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { AnimeFilters } from "@/lib/api/search"
@@ -50,6 +51,7 @@ export default function AnimeSearchPage() {
     if (searchParams.get("search")) params.search = searchParams.get("search")!
     if (searchParams.get("status")) params.status = searchParams.get("status")!.split(",")
     if (searchParams.get("format")) params.format = searchParams.get("format")!.split(",")
+    if (searchParams.get("season")) params.season = searchParams.get("season")!.split(",")
     if (searchParams.get("genres")) params.genres = searchParams.get("genres")!.split(",")
     if (searchParams.get("year")) params.year = parseInt(searchParams.get("year")!, 10)
     if (searchParams.get("sort")) params.sort = searchParams.get("sort")!
@@ -120,10 +122,25 @@ export default function AnimeSearchPage() {
     }
   }
 
+  const toggleYearFilter = (year: number) => {
+    updateFilters({ year: filters.year === year ? undefined : year })
+  }
+
   const isFilterActive = (type: keyof AnimeFilters, value: string) => {
     const current = (filters[type] as string[]) || []
     return current.includes(value)
   }
+
+  const getOptionLabel = useCallback((type: "status" | "format" | "season", value: string) => {
+    const options =
+      type === "status"
+        ? filterOptions?.statuses
+        : type === "format"
+          ? filterOptions?.formats
+          : filterOptions?.seasons
+
+    return options?.find((option) => option.code === value)?.description ?? value
+  }, [filterOptions])
 
   const clearFilters = () => {
     router.push(pathname)
@@ -200,7 +217,7 @@ export default function AnimeSearchPage() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col border-l border-border/50 shadow-2xl">
+              <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col border-l border-border/50 shadow-2xl overflow-hidden">
                 <SheetHeader className="p-8 border-b border-border/50 bg-secondary/30">
                   <SheetTitle className="text-2xl font-bold">Filtros Avanzados</SheetTitle>
                   <SheetDescription className="text-base text-muted-foreground">
@@ -208,7 +225,7 @@ export default function AnimeSearchPage() {
                   </SheetDescription>
                 </SheetHeader>
                 
-                <ScrollArea className="flex-1 p-8 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
                   <div className="space-y-10 pb-8">
                     {/* Sort Options */}
                     {filterOptions?.sort_options && (
@@ -285,16 +302,54 @@ export default function AnimeSearchPage() {
                         </div>
                       </div>
                     )}
+
+                    {filterOptions?.seasons && (
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Season</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {filterOptions.seasons.map(season => (
+                            <Badge
+                              key={season.code}
+                              variant={isFilterActive("season", season.code) ? "default" : "outline"}
+                              className="cursor-pointer px-4 py-2 text-sm rounded-xl transition-all border-border/50"
+                              onClick={() => toggleFilter("season", season.code)}
+                            >
+                              {season.description}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {filterOptions?.years && (
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Year</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {filterOptions.years.map(year => (
+                            <Badge
+                              key={year}
+                              variant={filters.year === year ? "default" : "outline"}
+                              className="cursor-pointer px-4 py-2 text-sm rounded-xl transition-all border-border/50"
+                              onClick={() => toggleYearFilter(year)}
+                            >
+                              {year}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </ScrollArea>
+                </div>
 
                 <SheetFooter className="p-8 border-t border-border/50 bg-background/50 backdrop-blur-md flex-row gap-3 sm:space-x-0">
                   <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold border-border/50 hover:bg-secondary" onClick={clearFilters}>
                     Limpiar
                   </Button>
-                  <Button className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90" onClick={() => {}}>
-                    Aplicar filtros
-                  </Button>
+                  <SheetClose asChild>
+                    <Button className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90">
+                      Aplicar filtros
+                    </Button>
+                  </SheetClose>
                 </SheetFooter>
               </SheetContent>
             </Sheet>
@@ -329,7 +384,9 @@ export default function AnimeSearchPage() {
               if (Array.isArray(value)) {
                 return value.map(v => (
                   <Badge key={`${key}-${v}`} variant="secondary" className="gap-2 px-3 py-1.5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors rounded-full font-medium">
-                    {v}
+                    {key === "status" || key === "format" || key === "season"
+                      ? getOptionLabel(key, v)
+                      : v}
                     <X 
                       className="w-3.5 h-3.5 cursor-pointer hover:scale-110 transition-transform" 
                       onClick={() => toggleFilter(key as keyof AnimeFilters, v)}
@@ -475,7 +532,7 @@ export default function AnimeSearchPage() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: 100 }}
             onClick={scrollToTop}
-            className="fixed bottom-10 right-10 z-50 p-5 rounded-3xl bg-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-110 active:scale-90 transition-all group"
+            className="fixed bottom-10 right-10 z-50 p-5 rounded-3xl bg-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-110 active:scale-90 transition group"
           >
             <ArrowUp className="w-7 h-7 group-hover:-translate-y-1 transition-transform" />
             <div className="absolute inset-0 rounded-3xl bg-primary animate-ping opacity-20 pointer-events-none" />
