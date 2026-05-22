@@ -3,31 +3,51 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-use Illuminate\Support\Facades\Cache; // Añade esta importación
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// Ventanas basadas en la grilla actual de AnimeSchedule.net para la semana
+// del 18 al 24 de mayo de 2026, convertida de BST a GMT-03 (Montevideo).
+// Se priorizan los bloques donde suelen salir episodios de anime TV de forma
+// regular, ignorando estrenos aislados de madrugada/casi medianoche.
+$airingRefreshWindows = [
+    1 => ['10:00', '14:00'], // Lunes
+    2 => ['09:30', '14:30'], // Martes
+    3 => ['07:30', '14:30'], // Miercoles
+    4 => ['07:30', '14:30'], // Jueves
+    5 => ['09:30', '14:00'], // Viernes
+    6 => ['05:00', '14:30'], // Sabado
+    7 => ['05:30', '13:30'], // Domingo
+];
+
+$shouldRunAiringRefresh = static function () use ($airingRefreshWindows): bool {
+    $now = now('America/Montevideo');
+    $window = $airingRefreshWindows[$now->isoWeekday()] ?? null;
+
+    if (!$window) {
+        return false;
+    }
+
+    [$startTime, $endTime] = $window;
+
+    $startsAt = $now->copy()->setTimeFromTimeString($startTime);
+    $endsAt = $now->copy()->setTimeFromTimeString($endTime);
+
+    return $now->greaterThanOrEqualTo($startsAt)
+        && $now->lessThanOrEqualTo($endsAt);
+};
+
 Schedule::command('anilist:refresh-airing-anime')
+    ->timezone('America/Montevideo')
     ->everyFiveMinutes()
+    ->when($shouldRunAiringRefresh)
     ->appendOutputTo(storage_path('logs/scheduler.log'))
     ->withoutOverlapping();
 
-// Modificación para el segundo script
 Schedule::command('anilist:refresh-trending-anime')
-    ->everyMinute() // Evaluamos cada minuto
-    ->when(function () {
-        // Obtenemos la próxima fecha de ejecución esperada
-        $nextRun = Cache::get('next_run_trending_anime');
-        
-        // Si no hay fecha (primera vez) o ya pasamos la fecha programada, ejecutamos
-        return !$nextRun || now()->greaterThanOrEqualTo($nextRun);
-    })
-    ->after(function () {
-        // Una vez que termina de ejecutarse, calculamos el próximo salto aleatorio (entre 60 y 120 minutos)
-        $randomMinutes = rand(60, 120);
-        Cache::put('next_run_trending_anime', now()->addMinutes($randomMinutes));
-    })
+    ->timezone('America/Montevideo')
+    ->everyTwoHours()
     ->appendOutputTo(storage_path('logs/scheduler.log'))
     ->withoutOverlapping();
