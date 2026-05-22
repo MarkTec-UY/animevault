@@ -21,9 +21,9 @@ export function HeroSection({ featured, spotlight }: HeroSectionProps) {
           <Badge variant="secondary" className="bg-primary/10 text-primary">
             Catalog syncing
           </Badge>
-          <h1 className="max-w-3xl font-serif text-5xl text-foreground sm:text-6xl">
-            Anime data is loading from the backend.
-          </h1>
+            <h1 className="max-w-3xl font-bold text-5xl text-foreground sm:text-6xl tracking-tight">
+              Anime data is loading from the backend.
+            </h1>
           <p className="max-w-xl text-base leading-7 text-muted-foreground">
             The landing page is already wired to the API. As soon as the catalog responds,
             featured titles and live sections will appear here automatically.
@@ -80,7 +80,7 @@ export function HeroSection({ featured, spotlight }: HeroSectionProps) {
             </div>
 
             <div className="space-y-2">
-              <h1 className="max-w-4xl font-serif text-5xl leading-tight text-foreground text-balance sm:text-6xl lg:text-7xl">
+              <h1 className="max-w-4xl font-bold text-5xl leading-tight text-foreground text-balance sm:text-6xl lg:text-7xl tracking-tight">
                 {featured.title}
               </h1>
               {featured.nativeTitle ? (
@@ -155,7 +155,7 @@ export function HeroSection({ featured, spotlight }: HeroSectionProps) {
                   href={item.href}
                   className="group flex items-center gap-4 rounded-xl border border-border/60 bg-card/65 p-3 transition-all duration-200 hover:border-primary/40 hover:bg-card"
                 >
-                  <span className="w-8 shrink-0 font-serif text-2xl text-primary/60">
+                  <span className="w-8 shrink-0 font-bold text-2xl text-primary/60">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-md bg-secondary">
