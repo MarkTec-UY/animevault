@@ -8,10 +8,10 @@ import { useInfiniteSearchAnime } from "@/hooks/use-search-anime"
 import { useAnimeFilterOptions } from "@/hooks/use-anime-filter-options"
 import { AnimeCard } from "@/components/anime/anime-card"
 import { AnimeDefaultSections } from "@/components/shared/anime-category-sections"
-import { Input } from "@/components/ui/input"
+import { RouteSearchInput } from "@/components/shared/route-search-input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, X, Zap, Loader2, SlidersHorizontal, ArrowUp } from "lucide-react"
+import { X, Zap, Loader2, SlidersHorizontal, ArrowUp } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -113,17 +113,6 @@ export default function AnimeSearchPage() {
     router.push(`${pathname}?${params.toString()}`)
   }, [pathname, router, searchParams])
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    const params = new URLSearchParams(searchParams.toString())
-    if (value) {
-      params.set("search", value)
-    } else {
-      params.delete("search")
-    }
-    router.replace(`${pathname}?${params.toString()}`)
-  }
-
   const toggleFilter = (type: keyof AnimeFilters, value: string) => {
     const current = (filters[type] as string[]) || []
     if (current.includes(value)) {
@@ -205,15 +194,11 @@ export default function AnimeSearchPage() {
       {/* Sticky Search Bar Container */}
       <div className="sticky top-16 z-40 -mx-4 px-4 py-4 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm transition-all duration-300">
         <div className="flex flex-col sm:flex-row gap-4 items-center max-w-5xl mx-auto">
-          <div className="relative flex-1 group w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input
-              placeholder="Que quieres ver hoy?..."
-              value={filters.search || ""}
-              onChange={handleSearchChange}
-              className="pl-12 h-12 text-lg bg-secondary/40 border-border/50 focus:bg-background transition-all rounded-2xl shadow-sm focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
+          <RouteSearchInput
+            placeholder="Que quieres ver hoy?..."
+            searchValue={filters.search || ""}
+            className="pl-12 h-12 text-lg bg-secondary/40 border-border/50 focus:bg-background transition-all rounded-2xl shadow-sm focus:ring-2 focus:ring-primary/20"
+          />
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Sheet>

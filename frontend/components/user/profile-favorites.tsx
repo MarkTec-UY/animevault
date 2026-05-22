@@ -39,7 +39,7 @@ export function ProfileFavorites({ favorites }: ProfileFavoritesProps) {
           </Link>
         </div>
       ) : (
-        <div className="group/slider relative">
+        <div className="group/slider relative custom-scrollbar">
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
             {favorites.map((fav) => (
               <Link

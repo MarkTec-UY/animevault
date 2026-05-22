@@ -26,6 +26,11 @@ trap handle_shutdown INT TERM
 
 log_line "Scheduler container started. Running php artisan schedule:run -v every ${INTERVAL_SECONDS}s."
 
+# Run airing anime refresh immediately on startup (first execution)
+log_line "Running initial airing anime refresh."
+php artisan anilist:refresh-airing-anime 2>&1 | tee -a "$LOG_FILE"
+log_line "Initial airing anime refresh completed."
+
 while true; do
   log_line "Starting scheduler tick."
   php artisan schedule:run -v 2>&1 | tee -a "$LOG_FILE"
