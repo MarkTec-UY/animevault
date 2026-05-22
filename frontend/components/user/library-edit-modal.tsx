@@ -42,6 +42,7 @@ export function LibraryEditModal({ item, onClose, onUpdate }: LibraryEditModalPr
   const [saving, setSaving] = useState(false)
 
   const maxEpisodes = item.anime.episodes ?? 0
+  const progressPercentage = maxEpisodes > 0 ? (progress / maxEpisodes) * 100 : 0
 
   async function handleSave() {
     setSaving(true)
@@ -203,13 +204,33 @@ export function LibraryEditModal({ item, onClose, onUpdate }: LibraryEditModalPr
                   >
                     <Minus className="h-4 w-4" />
                   </button>
-                  <Slider
-                    value={[progress]}
-                    onValueChange={([v]) => setProgress(v)}
-                    max={maxEpisodes}
-                    step={1}
-                    className="flex-1"
-                  />
+                  <div className="relative flex-1">
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-secondary/80"
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-emerald-500 shadow-[0_0_14px_rgba(16,185,129,0.35)]"
+                      style={{ width: `${progressPercentage}%` }}
+                    />
+                    <Slider
+                      value={[progress]}
+                      onValueChange={([v]) => setProgress(v)}
+                      max={maxEpisodes}
+                      step={1}
+                      className={cn(
+                        "relative z-10",
+                        "[&_[data-slot=slider-track]]:bg-transparent",
+                        "[&_[data-slot=slider-range]]:bg-transparent",
+                        "[&_[data-slot=slider-thumb]]:border-emerald-500",
+                        "[&_[data-slot=slider-thumb]]:bg-white",
+                        "[&_[data-slot=slider-thumb]]:shadow-[0_0_0_5px_rgba(16,185,129,0.18)]",
+                        "[&_[data-slot=slider-thumb]]:focus-visible:ring-emerald-400/50",
+                        "[&_[data-slot=slider-thumb]]:hover:ring-emerald-400/35"
+                      )}
+                    />
+                  </div>
                   <button
                     onClick={() => setProgress(Math.min(maxEpisodes, progress + 1))}
                     disabled={progress >= maxEpisodes}
