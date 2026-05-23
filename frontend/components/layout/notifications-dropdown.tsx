@@ -40,7 +40,7 @@ function NotificationRow({
   const content = (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-2xl border px-3 py-3 transition-colors",
+        "flex w-full max-w-full items-start gap-3 overflow-hidden rounded-2xl border px-3 py-3 transition-colors",
         isUnread
           ? "border-primary/20 bg-primary/5 hover:border-primary/35 hover:bg-primary/8"
           : "border-border/70 bg-card hover:bg-accent/40",
@@ -89,7 +89,7 @@ function NotificationRow({
     return (
       <button
         type="button"
-        className="block w-full text-left"
+        className="block w-full max-w-full text-left"
         onClick={() => {
           onRead(notification)
           onNavigate()
@@ -103,7 +103,7 @@ function NotificationRow({
   return (
     <Link
       href={href}
-      className="block"
+      className="block w-full max-w-full"
       onClick={() => {
         onRead(notification)
         onNavigate()
@@ -231,8 +231,8 @@ export function NotificationsDropdown({
             </p>
           </div>
         ) : (
-          <ScrollArea className="max-h-[26rem]">
-            <div className="space-y-3 p-4">
+          <ScrollArea className="max-h-[26rem] [&_[data-slot=scroll-area-viewport]>div]:!block [&_[data-slot=scroll-area-viewport]>div]:min-w-full">
+            <div className="space-y-3 p-4 pr-5">
               {notifications.map((notification) => (
                 <NotificationRow
                   key={notification.id}
