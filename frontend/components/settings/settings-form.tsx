@@ -3,8 +3,6 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import {
-  AlertCircle,
-  CheckCircle2,
   ImagePlus,
   Loader2,
   Trash2,
@@ -23,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
+import { settingsToast } from "@/components/settings/settings-toast"
 import { getCsrfTokenFromDocument } from "@/lib/csrf"
 import type {
   ProfileUser,
@@ -104,8 +103,6 @@ export function SettingsForm({ user }: SettingsFormProps) {
   )
 
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
 
   const handleImageChange =
@@ -115,11 +112,11 @@ export function SettingsForm({ user }: SettingsFormProps) {
       if (!file) return
 
       if (file.size > 5 * 1024 * 1024) {
-        setError("Images must be smaller than 5 MB.")
+        settingsToast.invalidImage("Images must be smaller than 5 MB.")
         return
       }
       if (!file.type.startsWith("image/")) {
-        setError("Only image files are supported.")
+        settingsToast.invalidImage("Only image files are supported.")
         return
       }
 
@@ -140,8 +137,6 @@ export function SettingsForm({ user }: SettingsFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
-    setSuccess(null)
     setFieldErrors({})
     setSubmitting(true)
 
@@ -179,22 +174,27 @@ export function SettingsForm({ user }: SettingsFormProps) {
         if (response.status === 422) {
           const data = await response.json().catch(() => ({}))
           setFieldErrors(data?.errors ?? {})
+          settingsToast.invalidFields(
+            data?.message ?? "Review the highlighted fields and try again."
+          )
           throw new Error(data?.message ?? "Some fields are invalid.")
         }
         throw new Error(`Failed to save (${response.status})`)
       }
 
-      setSuccess("Your settings have been saved.")
+      settingsToast.saved()
       // Reset image staging state and refresh server-rendered nav/profile.
       setAvatar((prev) => ({ ...prev, file: null, remove: false }))
       setBanner((prev) => ({ ...prev, file: null, remove: false }))
       router.refresh()
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong while saving your settings."
-      )
+      if (!(err instanceof Error && err.message === "Some fields are invalid.")) {
+        settingsToast.saveError(
+          err instanceof Error
+            ? err.message
+            : "Something went wrong while saving your settings."
+        )
+      }
     } finally {
       setSubmitting(false)
     }
@@ -202,26 +202,6 @@ export function SettingsForm({ user }: SettingsFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Status messages */}
-      {error && (
-        <div
-          role="alert"
-          className="flex items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
-        >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>{error}</p>
-        </div>
-      )}
-      {success && (
-        <div
-          role="status"
-          className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4 text-sm text-primary"
-        >
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>{success}</p>
-        </div>
-      )}
-
       {/* Banner upload */}
       <section className="space-y-3">
         <div>

@@ -92,24 +92,6 @@ export function Footer() {
             </div>
           ))}
         </div>
-
-        {/* Bottom bar */}
-        <div className="py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} AnimeVault. All rights reserved.
-          </p>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Terms
-            </Link>
-            <Link href="/sitemap" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Sitemap
-            </Link>
-          </div>
-        </div>
       </div>
     </footer>
   )
