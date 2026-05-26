@@ -12,8 +12,7 @@ use OpenApi\Attributes as OA;
         email: 'support@animevault.local',
     ),
     license: new OA\License(
-        name: 'Apache 2.0',
-        url: 'https://www.apache.org/licenses/LICENSE-2.0.html',
+        name: 'AnimeVault Non-Commercial Source License 1.0',
     ),
 )]
 #[OA\SecurityScheme(
