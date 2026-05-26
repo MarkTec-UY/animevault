@@ -1,7 +1,7 @@
 # AnimeVault
 
 <p align="center">
-  <img src="./frontend/public/AnimeVault.svg" width="150" alt="AnimeVault logo" />
+  <img src="https://raw.githubusercontent.com/MarkTec-UY/animevault/refs/heads/main/frontend/public/AnimeVault.svg" width="150" alt="AnimeVault logo" />
 </p>
 
 <p align="center">
